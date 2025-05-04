@@ -1,5 +1,5 @@
 /*
-입력 관련 클래스
+지금은 단순히 Message -> WndProc -> SystemClass.MessageHandler 에서 키 입력 여부 데이터 저장
 */
 #pragma once
 

@@ -1,8 +1,12 @@
 /*
-- WinMain
-	- SystemClass
-		- ApplicationClass: 렌더링
-		- InputClass: 입력 대응
+
+Flow
+- Initialize
+	- InitializeWindows
+- Run (message loop)
+	- message 에 따라 렌더링 (Frame) 또는 종료 등 처리
+- Shutdown
+	- ShutdownWindows
 */
 
 #pragma once
@@ -23,6 +27,7 @@ public:
 	~SystemClass();
 
 	bool Initialize();
+	// 포인터 등 자원 해제
 	void Shutdown();
 	void Run();
 
@@ -42,8 +47,10 @@ private:
 	ApplicationClass* m_Application;
 };
 
+// 윈도우 메세지 처리 함수
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+// 전역변수 인스턴스
 static SystemClass* ApplicationHandle = 0;
 
 

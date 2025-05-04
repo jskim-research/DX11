@@ -128,25 +128,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="applicationclass.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="inputclass.h" />
     <ClInclude Include="main.h" />
-    <ClInclude Include="Resource.h" />
     <ClInclude Include="systemclass.h" />
-    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="applicationclass.cpp" />
     <ClCompile Include="inputclass.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="systemclass.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="DX11.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="DX11.ico" />
-    <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
