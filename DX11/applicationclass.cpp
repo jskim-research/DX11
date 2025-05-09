@@ -1,4 +1,5 @@
 #include "applicationclass.h"
+#include <fstream>
 
 ApplicationClass::ApplicationClass()
 {
@@ -27,6 +28,16 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize Direct3D", L"Error", MB_OK);
 		return false;
 	}
+
+	char* videoCardName = new char[128];
+	int memory = 0;
+
+	m_Direct3D->GetVideoCardInfo(videoCardName, memory);
+
+	std::ofstream fout;
+	fout.open("video_card_info.txt");
+	fout << videoCardName << ' ' << memory << std::endl;
+	fout.close();
 
 	return true;
 }
@@ -59,7 +70,7 @@ bool ApplicationClass::Frame()
 bool ApplicationClass::Render()
 {
 	// Clear the buffers to begin the scene.
-	m_Direct3D->BeginScene(0.5f, 0.5f, 0.5f, 1.0f);
+	m_Direct3D->BeginScene(0.5f, 0.5f, 0.0f, 1.0f);  // yellow
 
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
