@@ -2,7 +2,8 @@
 - WinMain
     - SystemClass
         - ApplicationClass: 렌더링
-            - D3DClass
+            - D3DClass: D3D 기반 하드웨어 (모니터, GPU, ...) 조작
+            - ColorShaderClass: Shader 관련 기능 담당
         - InputClass: 입력 대응
 */
 
