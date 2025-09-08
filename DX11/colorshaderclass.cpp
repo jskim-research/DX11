@@ -307,6 +307,7 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
 void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
 	// Set the vertex input layout.
+	// vertex shader 에 들어갈 input 형태를 GPU 에 알려주기
 	deviceContext->IASetInputLayout(m_layout);
 
 	// Set the vertex and pixel shaders that will be used to render this triangle.
@@ -314,6 +315,7 @@ void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int inde
 	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
 
 	// Render the triangle.
+	// GPU 한테 앞에서 할당한 shader 들로 그려줘! 하는거임
 	deviceContext->DrawIndexed(indexCount, 0, 0);
 
 	return;
