@@ -50,8 +50,8 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	HRESULT result;
 
 	// 테스트를 위해 수동 데이터 생성
-	m_vertexCount = 3;
-	m_indexCount = 3;
+	m_vertexCount = 4;
+	m_indexCount = 6;
 	vertices = new VertexType[m_vertexCount];
 	if (!vertices)
 	{
@@ -64,17 +64,22 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 		return false;
 	}
 
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // bottom left
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);  // green
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // top middle
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);  // green
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // bottom right
-	vertices[2].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);  // green
+	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);
+	vertices[0].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);
+	vertices[1].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	vertices[2].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	vertices[3].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 
 	// 왼손 좌표계로, z 축이 모니터 쪽을 향하도록 설정
 	indices[0] = 0;
 	indices[1] = 1;
 	indices[2] = 2;
+	indices[3] = 0;
+	indices[4] = 2;
+	indices[5] = 3;
 
 	// device 에 vertex, index buffer resource 생성
 	// 생성 시 option 들을 설정하는 부분들 존재

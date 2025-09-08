@@ -33,7 +33,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	m_Camera = new CameraClass;
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
+	m_Camera->SetPosition(0.0f, 0.0f, -15.0f);
 
 	m_Model = new ModelClass;
 	result = m_Model->Initialize(m_Direct3D->GetDevice());
