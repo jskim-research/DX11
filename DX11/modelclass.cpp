@@ -4,6 +4,7 @@ ModelClass::ModelClass()
 {
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
+	m_Texture = 0;
 }
 
 ModelClass::ModelClass(const ModelClass&)
@@ -14,7 +15,7 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::Initialize(ID3D11Device* device)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename)
 {
 	bool result;
 
@@ -23,11 +24,19 @@ bool ModelClass::Initialize(ID3D11Device* device)
 	{
 		return false;
 	}
+
+	result = LoadTexture(device, deviceContext, textureFilename);
+	if (!result)
+	{
+		return false;
+	}
+
 	return true;
 }
 
 void ModelClass::Shutdown()
 {
+	ReleaseTexture();
 	ShutdownBuffers();
 }
 
@@ -41,6 +50,11 @@ int ModelClass::GetIndexCount()
 	return m_indexCount;
 }
 
+ID3D11ShaderResourceView* ModelClass::GetTexture()
+{
+	return m_Texture->GetTexture();
+}
+
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
@@ -50,8 +64,8 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	HRESULT result;
 
 	// 테스트를 위해 수동 데이터 생성
-	m_vertexCount = 4;
-	m_indexCount = 6;
+	m_vertexCount = 3;
+	m_indexCount = 3;
 	vertices = new VertexType[m_vertexCount];
 	if (!vertices)
 	{
@@ -64,22 +78,19 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 		return false;
 	}
 
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);
-	vertices[0].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);
-	vertices[1].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	vertices[2].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
-	vertices[3].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
+
+	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
+
+	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
 	// 왼손 좌표계로, z 축이 모니터 쪽을 향하도록 설정
-	indices[0] = 0;
-	indices[1] = 1;
-	indices[2] = 2;
-	indices[3] = 0;
-	indices[4] = 2;
-	indices[5] = 3;
+	indices[0] = 0;  // Bottom left.
+	indices[1] = 1;  // Top middle.
+	indices[2] = 2;  // Bottom right.
 
 	// device 에 vertex, index buffer resource 생성
 	// 생성 시 option 들을 설정하는 부분들 존재
@@ -166,4 +177,30 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	// 이 vertex buffer 로부터 render 될 primitive 형태 = triangle 임을 GPU 에게 알림
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+{
+	bool result;
+
+	// Create and initialize the texture object.
+	m_Texture = new TextureClass;
+
+	result = m_Texture->Initialize(device, deviceContext, filename);
+	if (!result)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void ModelClass::ReleaseTexture()
+{
+	if (m_Texture)
+	{
+		m_Texture->Shutdown();
+		delete m_Texture;
+		m_Texture = 0;
+	}
 }

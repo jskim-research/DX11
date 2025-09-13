@@ -135,6 +135,8 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="modelclass.h" />
     <ClInclude Include="systemclass.h" />
+    <ClInclude Include="textureclass.h" />
+    <ClInclude Include="textureshaderclass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="applicationclass.cpp" />
@@ -145,6 +147,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelclass.cpp" />
     <ClCompile Include="systemclass.cpp" />
+    <ClCompile Include="textureclass.cpp" />
+    <ClCompile Include="textureshaderclass.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
