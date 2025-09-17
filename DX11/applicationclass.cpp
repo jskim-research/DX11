@@ -6,7 +6,8 @@ ApplicationClass::ApplicationClass()
 	m_Direct3D = 0;
 	m_Camera = 0;
 	m_Model = 0;
-	m_TextureShader = 0;
+	m_LightShader = 0;
+	m_Light = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -45,14 +46,6 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	m_TextureShader = new TextureShaderClass;
-	result = m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd);
-	if (!result)
-	{
-		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
-		return false;
-	}
-
 	char* videoCardName = new char[128];
 	int memory = 0;
 
@@ -63,16 +56,34 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	fout << videoCardName << ' ' << memory << std::endl;
 	fout.close();
 
+	m_LightShader = new LightShaderClass;
+	result = m_LightShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_Light = new LightClass;
+	m_Light->SetDiffuseColor(1, 1, 1, 1);
+	m_Light->SetDirection(0, 0, 1);
+
 	return true;
 }
 
 void ApplicationClass::Shutdown()
 {
-	if (m_TextureShader)
+	if (m_Light)
 	{
-		m_TextureShader->Shutdown();
-		delete m_TextureShader;
-		m_TextureShader = 0;
+		delete m_Light;
+		m_Light = 0;
+	}
+
+	if (m_LightShader)
+	{
+		m_LightShader->Shutdown();
+		delete m_LightShader;
+		m_LightShader = 0;
 	}
 
 	// Release the Direct3D object.
@@ -101,17 +112,24 @@ void ApplicationClass::Shutdown()
 
 bool ApplicationClass::Frame()
 {
+	static float rotation = 0.0f;
 	bool result;
 
+	rotation -= 0.0174532925f * 0.5f;  // radian ¥‹¿ß ∞ªΩ≈
+	if (rotation < 0.0f)
+	{
+		rotation += 360.0f;
+	}
+
 	// Render the graphics scene.
-	result = Render();
+	result = Render(rotation);
 	if (!result)
 	{
 		return false;
 	}
 }
 
-bool ApplicationClass::Render()
+bool ApplicationClass::Render(float rotation)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
@@ -125,9 +143,11 @@ bool ApplicationClass::Render()
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
+	worldMatrix = XMMatrixRotationY(rotation);  // ±‚¡∏ world matrix µ§æÓæ∫øÚ
+
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
+	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
 	if (!result)
 	{
 		return false;

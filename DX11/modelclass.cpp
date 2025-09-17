@@ -80,12 +80,15 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
 	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
 	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
+	vertices[0].normal = XMFLOAT3(0, 0, -1);
 
 	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
 	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
+	vertices[1].normal = XMFLOAT3(0, 0, -1);
 
 	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
 	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
+	vertices[2].normal = XMFLOAT3(0, 0, -1);
 
 	// 왼손 좌표계로, z 축이 모니터 쪽을 향하도록 설정
 	indices[0] = 0;  // Bottom left.
