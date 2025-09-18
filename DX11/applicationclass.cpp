@@ -65,8 +65,8 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	m_Light = new LightClass;
-	m_Light->SetDiffuseColor(1, 1, 1, 1);
-	m_Light->SetDirection(0, 0, 1);
+	m_Light->SetDiffuseColor(0, 1, 0, 1);
+	m_Light->SetDirection(-1, 0, 0);
 
 	return true;
 }
@@ -115,7 +115,7 @@ bool ApplicationClass::Frame()
 	static float rotation = 0.0f;
 	bool result;
 
-	rotation -= 0.0174532925f * 0.5f;  // radian 단위 갱신
+	rotation -= 0.0174532925f * 1.0f;  // radian 단위 갱신
 	if (rotation < 0.0f)
 	{
 		rotation += 360.0f;
