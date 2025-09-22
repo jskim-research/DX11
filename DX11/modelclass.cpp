@@ -7,9 +7,8 @@ ModelClass::ModelClass()
 	m_indexBuffer = 0;
 	m_Texture = 0;
 	m_objectParser = 0;
-	m_gltfTextures = 0;
-	m_gltfTextureViews = 0;
-	m_gltfTextureNum = 0;
+	m_textureArray = 0;
+	m_textureArrayView = 0;
 }
 
 ModelClass::ModelClass(const ModelClass&)
@@ -60,9 +59,9 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 	return m_Texture->GetTexture();
 }
 
-ID3D11ShaderResourceView** ModelClass::GetGltfTextures()
+ID3D11ShaderResourceView* ModelClass::GetGltfTextures()
 {
-	return m_gltfTextureViews;
+	return m_textureArrayView;
 }
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -75,7 +74,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, ID3D11DeviceContext* de
 	m_objectParser = new ObjectParser;
 
 	std::vector<tinygltf::Image> images;
-	const char* fileName = "./data/zhu_yuan.glb";
+	const char* fileName = "./data/burnice.glb";
 	bool parseResult = m_objectParser->ParseGLTFFile(fileName, &gltf_vertices, &indices, &m_vertexCount, &m_indexCount, images);
 
 	if (!parseResult)
@@ -83,64 +82,64 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, ID3D11DeviceContext* de
 		return false;
 	}
 
-	// GLTF 에 있는 texture 개수만큼 생성
-	m_gltfTextures = new ID3D11Texture2D*[images.size()];
-	m_gltfTextureViews = new ID3D11ShaderResourceView * [images.size()];
+	if (images.size() <= 0)
+	{
+		return false;
+	}
+
+	D3D11_TEXTURE2D_DESC textureDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+
+	// 모든 images 가 같은 resolution 이라고 가정
+	textureDesc.Width = images[0].width;
+	textureDesc.Height = images[0].height;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = images.size();
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;  // unsigned char *
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+	result = device->CreateTexture2D(&textureDesc, 0, &m_textureArray);
+	if (FAILED(result))
+	{
+		return false;
+	}
 
 	for (int i = 0; i < images.size(); i++)
 	{
 		tinygltf::Image& image = images[i];
-		HRESULT hResult;
-		ID3D11Texture2D* tempTexture;
-		ID3D11ShaderResourceView* tempTextureView;
-		D3D11_TEXTURE2D_DESC textureDesc;
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 		unsigned int rowPitch;
-
-		textureDesc.Width = image.width;
-		textureDesc.Height = image.height;
-		textureDesc.MipLevels = 0;
-		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;  // unsigned char *
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-		result = device->CreateTexture2D(&textureDesc, 0, &tempTexture);
-		if (FAILED(result))
-		{
-			return false;
-		}
-
-		// image.width * 4 는 RGBA 라는 뜻이겠지?
 		rowPitch = (image.width * 4) * sizeof(unsigned char);
-		// Copy the targa image data into the texture.
-		deviceContext->UpdateSubresource(tempTexture, 0, NULL, image.image.data(), rowPitch, 0);
-		// Setup the shader resource view description.
-		srvDesc.Format = textureDesc.Format;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MostDetailedMip = 0;
-		srvDesc.Texture2D.MipLevels = -1;
 
-		// Create the shader resource view for the texture.
-		hResult = device->CreateShaderResourceView(tempTexture, &srvDesc, &tempTextureView);
-		if (FAILED(hResult))
-		{
-			return false;
-		}
-
-		// Generate mipmaps for this texture.
-		deviceContext->GenerateMips(tempTextureView);
-		m_gltfTextures[i] = tempTexture;
-		m_gltfTextureViews[i] = tempTextureView;
-		m_gltfTextureNum++;
+		deviceContext->UpdateSubresource(
+			m_textureArray,
+			D3D11CalcSubresource(0, i, textureDesc.MipLevels),  // Mip 0, Array Slice i, 해당 함수 mip level 수동 지정 필요
+			NULL, 
+			image.image.data(), 
+			rowPitch, 
+			0);	
 	}
 
-	// device 에 vertex, index buffer resource 생성
-	// 생성 시 option 들을 설정하는 부분들 존재
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc.Texture2DArray.MostDetailedMip = 0;
+	srvDesc.Texture2DArray.MipLevels = -1;
+	srvDesc.Texture2DArray.FirstArraySlice = 0;
+	srvDesc.Texture2DArray.ArraySize = images.size();
+
+	// Create the shader resource view for the texture.
+	result = device->CreateShaderResourceView(m_textureArray, &srvDesc, &m_textureArrayView);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// Generate mipmaps for this texture.
+	deviceContext->GenerateMips(m_textureArrayView);
 
 	// Set up the description of the static vertex buffer.
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -252,12 +251,15 @@ void ModelClass::ReleaseTexture()
 		m_Texture = 0;
 	}
 
-	for (int i = 0; i < m_gltfTextureNum; i++)
+	if (m_textureArray)
 	{
-		m_gltfTextures[i]->Release();
-		m_gltfTextures[i] = 0;
+		m_textureArray->Release();
+		m_textureArray = 0;
+	}
 
-		m_gltfTextureViews[i]->Release();
-		m_gltfTextureViews[i] = 0;
+	if (m_textureArrayView)
+	{
+		m_textureArrayView->Release();
+		m_textureArrayView = 0;
 	}
 }

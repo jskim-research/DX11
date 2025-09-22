@@ -298,9 +298,6 @@ bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices
                 }
             }
 
-            if (imgIndex > 3 || imgIndex < 0)
-                return false;
-
             size_t vertexNum = posAccessor.count;
             size_t indexNum = prim.indices >= 0 ? model.accessors[prim.indices].count : vertexNum;
 
