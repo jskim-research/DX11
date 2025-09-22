@@ -270,18 +270,17 @@ bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices
         else
             (*vertices)[i].normal = XMFLOAT3(0.f, 0.f, 0.f);
 
-        /*
         if (uvBuffer)
             (*vertices)[i].texture = XMFLOAT2(uvBuffer[i * 2 + 0], uvBuffer[i * 2 + 1]);
         else
             (*vertices)[i].texture = XMFLOAT2(0.f, 0.f);
-        */
         
+        /*
         if (colorBuffer)
             (*vertices)[i].color = XMFLOAT4(colorBuffer[i * 4 + 0], colorBuffer[i * 4 + 1], colorBuffer[i * 4 + 2], colorBuffer[i * 4 + 3]);
         else
             (*vertices)[i].color = XMFLOAT4(1.f, 1.f, 1.f, 1.f); // 기본 흰색
-        
+        */
     }
 
     // Index 처리

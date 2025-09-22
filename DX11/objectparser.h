@@ -19,8 +19,9 @@ public:
 	struct GltfVertexType
 	{
 		XMFLOAT3 position;
+		XMFLOAT2 texture;
 		XMFLOAT3 normal;
-		XMFLOAT4 color;
+		// XMFLOAT4 color;
 	};
 
 public:

@@ -58,19 +58,15 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {
-	ObjectParser::VertexType* vertices = 0;
 	ObjectParser::GltfVertexType* gltf_vertices = 0;
 	unsigned long* indices;
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 	m_objectParser = new ObjectParser;
-	const char* fileName = "./data/Cube.txt";
-	// bool parseResult = m_objectParser->ParseCustomFile(fileName, &vertices, &indices, &m_vertexCount, &m_indexCount);
-	bool parseResult = m_objectParser->ParseCustomFile2(fileName, &vertices, &indices, &m_vertexCount, &m_indexCount);
 
-	// const char* fileName = "./data/zhu_yuan.glb";
-	// bool parseResult = m_objectParser->ParseGLTFFile(fileName, &gltf_vertices, &indices, &m_vertexCount, &m_indexCount);
+	const char* fileName = "./data/zhu_yuan.glb";
+	bool parseResult = m_objectParser->ParseGLTFFile(fileName, &gltf_vertices, &indices, &m_vertexCount, &m_indexCount);
 
 	if (!parseResult)
 	{
@@ -82,15 +78,13 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
 	// Set up the description of the static vertex buffer.
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::VertexType) * m_vertexCount;
-	// vertexBufferDesc.ByteWidth = sizeof(ObjectParser::GltfVertexType) * m_vertexCount;
+	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::GltfVertexType) * m_vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
 	// Give the subresource structure a pointer to the vertex data.
-	vertexData.pSysMem = vertices;
 	vertexData.pSysMem = gltf_vertices;
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
@@ -120,15 +114,6 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	if (FAILED(result))
 	{
 		return false;
-	}
-
-	// vertexData.pSysMem, vertexData.pSysMem 에서 값들은 다 복사해간듯?
-	// 밑 데이터들은 이제 필요없다고 함
-
-	if (vertices)
-	{
-		delete[] vertices;
-		vertices = 0;
 	}
 
 	if (gltf_vertices)

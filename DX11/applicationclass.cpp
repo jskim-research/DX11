@@ -149,7 +149,7 @@ bool ApplicationClass::Render(float rotation)
 	worldMatrix = XMMatrixScaling(1, 1, 1);
 	// worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(rotation));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(0.0174532925f * 180));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0, -1, -11));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0, -1.5, -14));
 
 	// S R T
 	
