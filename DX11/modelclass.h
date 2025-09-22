@@ -3,10 +3,14 @@
 
 #include <d3d11.h>
 #include <directxmath.h>
+#include <vector>
 using namespace DirectX;
 
 #include "textureclass.h"
-#include "objectparser.h"
+
+// using CurVertexType = ObjectParser::... ∏¬√Á¡‡æﬂ«“µÌ
+
+class ObjectParser;
 
 class ModelClass
 {
@@ -29,8 +33,10 @@ public:
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
 
+	ID3D11ShaderResourceView** GetGltfTextures();
+
 private:
-	bool InitializeBuffers(ID3D11Device*);
+	bool InitializeBuffers(ID3D11Device*, ID3D11DeviceContext*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
@@ -43,6 +49,10 @@ private:
 	TextureClass* m_Texture;
 	ObjectParser* m_objectParser;
 
+	// std::vector<ID3D11Texture2D*> m_gltfTextures;
+	// std::vector<ID3D11ShaderResourceView*> m_gltfTextureViews;
+	ID3D11Texture2D** m_gltfTextures;
+	ID3D11ShaderResourceView** m_gltfTextureViews;
 };
 
 #endif

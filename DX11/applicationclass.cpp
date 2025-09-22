@@ -155,7 +155,7 @@ bool ApplicationClass::Render(float rotation)
 	
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
+	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures());
 	if (!result)
 	{
 		return false;

@@ -1,4 +1,8 @@
 Texture2D shaderTexture : register(t0);
+Texture2D gltfTexture0 : register(t1);
+Texture2D gltfTexture1 : register(t2);
+Texture2D gltfTexture2 : register(t3);
+Texture2D gltfTexture3 : register(t4);
 SamplerState SampleType : register(s0);
 
 cbuffer LightBuffer
@@ -14,14 +18,32 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
+	float3 tex : TEXCOORD0;
 };
 
-float4 LightPixelShader(PixelInputType input) : SV_TARGET
+float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 {
 	float4 textureColor;
 	float3 lightDir;
 	float lightIntensity;
 	float4 color;
+
+	if (input.tex.z == 0)
+	{
+		textureColor = gltfTexture0.Sample(SampleType, input.tex.xy);
+	}
+	else if (input.tex.z == 1)
+	{
+		textureColor = gltfTexture1.Sample(SampleType, input.tex.xy);
+	}
+	else if (input.tex.z == 2)
+	{
+		textureColor = gltfTexture2.Sample(SampleType, input.tex.xy);
+	}
+	else
+	{
+		textureColor = gltfTexture3.Sample(SampleType, input.tex.xy);
+	}
 
 	// textureColor = shaderTexture.Sample(SampleType, input.tex);
 	// 내적으로 사잇값 구하려면 invert 필요
@@ -29,8 +51,7 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 	lightIntensity = saturate(dot(lightDir, input.normal));
 
 	color = saturate(diffuseColor * lightIntensity);
-	// color = color * textureColor;
+	color = color * textureColor;
 
-	// color = input.color;
 	return color;
 }

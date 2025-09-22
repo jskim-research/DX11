@@ -8,7 +8,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
-
 using namespace std;
 
 ObjectParser::ObjectParser()
@@ -180,7 +179,7 @@ bool ObjectParser::ParseCustomFile2(const char* fileName, VertexType** vertices,
     return isSuccess;
 }
 
-bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount)
+bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount, std::vector<tinygltf::Image>& images)
 {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
@@ -198,6 +197,8 @@ bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices
             return false;
         }
     }
+
+    images = model.images;
 
     if (!warn.empty())
     {
@@ -270,17 +271,21 @@ bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices
         else
             (*vertices)[i].normal = XMFLOAT3(0.f, 0.f, 0.f);
 
+        // specify uv from which model.textures
+        int texIndex = model.materials[primitive.material].pbrMetallicRoughness.baseColorTexture.index;
+        // specify uv from which model.images => 실제로 이미지 담고 있음
+        int imgIndex = model.textures[texIndex].source;
+
         if (uvBuffer)
-            (*vertices)[i].texture = XMFLOAT2(uvBuffer[i * 2 + 0], uvBuffer[i * 2 + 1]);
+            (*vertices)[i].texture = XMFLOAT3(uvBuffer[i * 2 + 0], uvBuffer[i * 2 + 1], imgIndex);
         else
-            (*vertices)[i].texture = XMFLOAT2(0.f, 0.f);
+            (*vertices)[i].texture = XMFLOAT3(0.f, 0.f, 0.f);
         
-        /*
         if (colorBuffer)
             (*vertices)[i].color = XMFLOAT4(colorBuffer[i * 4 + 0], colorBuffer[i * 4 + 1], colorBuffer[i * 4 + 2], colorBuffer[i * 4 + 3]);
         else
             (*vertices)[i].color = XMFLOAT4(1.f, 1.f, 1.f, 1.f); // 기본 흰색
-        */
+       
     }
 
     // Index 처리
@@ -314,6 +319,51 @@ bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices
 
     *vertexCount = vertexNum;
     *indexCount = indexNum;
+
+    return true;
+}
+
+bool ObjectParser::ExtractTexturesFromGLB(const char* glbFilePath, const char* outputFolder)
+{
+    tinygltf::Model model;
+    tinygltf::TinyGLTF loader;
+    string err;
+    string warn;
+
+    // GLB 로드
+    bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, glbFilePath);
+    if (!ret)
+    {
+        return false;
+    }
+
+    // images 추출
+    for (size_t i = 0; i < model.images.size(); ++i)
+    {
+        const tinygltf::Image& image = model.images[i];
+        string fileName;
+
+        if (!image.image.empty())
+        {
+            // 파일 이름 생성
+            if (!image.name.empty())
+                fileName = string(outputFolder) + "/" + image.name;
+            else
+                fileName = string(outputFolder) + "/image_" + to_string(i);
+
+            // mimeType에 따라 확장자 결정
+            if (image.mimeType == "image/png")
+                fileName += ".png";
+            else if (image.mimeType == "image/jpeg")
+                fileName += ".jpg";
+            else
+                fileName += ".bin"; // 알 수 없는 타입
+
+            stbi_write_png(fileName.c_str(), image.width, image.height, image.component,
+                image.image.data(), image.width * image.component);
+        }
+        
+    }
 
     return true;
 }
