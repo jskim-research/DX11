@@ -136,6 +136,7 @@
     <ClInclude Include="lightshaderclass.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="modelclass.h" />
+    <ClInclude Include="objectparser.h" />
     <ClInclude Include="systemclass.h" />
     <ClInclude Include="textureclass.h" />
     <ClInclude Include="textureshaderclass.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="lightshader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelclass.cpp" />
+    <ClCompile Include="objectparser.cpp" />
     <ClCompile Include="systemclass.cpp" />
     <ClCompile Include="textureclass.cpp" />
     <ClCompile Include="textureshaderclass.cpp" />

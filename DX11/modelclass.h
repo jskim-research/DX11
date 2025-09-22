@@ -6,6 +6,7 @@
 using namespace DirectX;
 
 #include "textureclass.h"
+#include "objectparser.h"
 
 class ModelClass
 {
@@ -40,6 +41,8 @@ private:
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
 	int m_vertexCount, m_indexCount;
 	TextureClass* m_Texture;
+	ObjectParser* m_objectParser;
+
 };
 
 #endif

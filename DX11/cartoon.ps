@@ -1,0 +1,36 @@
+Texture2D shaderTexture : register(t0);
+SamplerState SampleType : register(s0);
+
+cbuffer LightBuffer
+{
+	float4 diffuseColor;
+	float3 lightDirection;
+	// 16 의 배수 제약 만족시키기 위함
+	float padding;
+};
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
+	float4 color : COLOR;
+};
+
+float4 LightPixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+	float3 lightDir;
+	float lightIntensity;
+	float4 color;
+
+	// textureColor = shaderTexture.Sample(SampleType, input.tex);
+	// 내적으로 사잇값 구하려면 invert 필요
+	lightDir = -lightDirection;
+	lightIntensity = saturate(dot(lightDir, input.normal));
+
+	color = saturate(diffuseColor * lightIntensity);
+	// color = color * textureColor;
+
+	// color = input.color;
+	return color;
+}

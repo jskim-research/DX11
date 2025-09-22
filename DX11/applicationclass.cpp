@@ -65,8 +65,9 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	m_Light = new LightClass;
-	m_Light->SetDiffuseColor(0, 1, 0, 1);
-	m_Light->SetDirection(-1, 0, 0);
+	m_Light->SetDiffuseColor(1, 1, 1, 1);
+	// m_Light->SetDirection(1, -1, 0);
+	m_Light->SetDirection(0, 0, 1);
 
 	return true;
 }
@@ -143,8 +144,15 @@ bool ApplicationClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	worldMatrix = XMMatrixRotationY(rotation);  // ±âÁ¸ world matrix µ¤¾î¾º¿ò
+	// worldMatrix = XMMatrixMultiply(XMMatrixRotationY(rotation), XMMatrixRotationX(rotation / 2));
+	
+	worldMatrix = XMMatrixScaling(1, 1, 1);
+	// worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(rotation));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(0.0174532925f * 180));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0, -1, -11));
 
+	// S R T
+	
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
