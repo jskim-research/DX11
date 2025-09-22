@@ -10,7 +10,8 @@ struct VertexInputType
 	float4 position : POSITION;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
-	float3 tex : TEXCOORD0;
+	float2 tex : TEXCOORD0;
+	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
 struct PixelInputType
@@ -18,7 +19,8 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
-	float3 tex : TEXCOORD0;
+	float2 tex : TEXCOORD0;
+	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
 PixelInputType CartoonVertexShader(VertexInputType input)
@@ -36,6 +38,6 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 	output.normal = normalize(output.normal);
 
 	output.tex = input.tex;
-
+	output.imageIndex = input.imageIndex;
 	return output;
 }

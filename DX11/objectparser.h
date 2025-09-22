@@ -23,7 +23,8 @@ public:
 		XMFLOAT3 position;
 		XMFLOAT3 normal;
 		XMFLOAT4 color;
-		XMFLOAT3 texture;  // (u, v, texture idx)
+		XMFLOAT2 texture;  // (u, v, texture idx)
+		uint32_t imageIndex;
 	};
 
 public:

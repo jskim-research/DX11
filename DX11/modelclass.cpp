@@ -7,6 +7,9 @@ ModelClass::ModelClass()
 	m_indexBuffer = 0;
 	m_Texture = 0;
 	m_objectParser = 0;
+	m_gltfTextures = 0;
+	m_gltfTextureViews = 0;
+	m_gltfTextureNum = 0;
 }
 
 ModelClass::ModelClass(const ModelClass&)
@@ -98,11 +101,10 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, ID3D11DeviceContext* de
 		textureDesc.Height = image.height;
 		textureDesc.MipLevels = 0;
 		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;  // unsigned char *
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;  // unsigned char *
 		textureDesc.SampleDesc.Count = 1;
 		textureDesc.SampleDesc.Quality = 0;
 		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = 0;
 		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 		textureDesc.CPUAccessFlags = 0;
 		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
@@ -134,7 +136,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, ID3D11DeviceContext* de
 		deviceContext->GenerateMips(tempTextureView);
 		m_gltfTextures[i] = tempTexture;
 		m_gltfTextureViews[i] = tempTextureView;
-
+		m_gltfTextureNum++;
 	}
 
 	// device ¿¡ vertex, index buffer resource »ý¼º
@@ -248,5 +250,14 @@ void ModelClass::ReleaseTexture()
 		m_Texture->Shutdown();
 		delete m_Texture;
 		m_Texture = 0;
+	}
+
+	for (int i = 0; i < m_gltfTextureNum; i++)
+	{
+		m_gltfTextures[i]->Release();
+		m_gltfTextures[i] = 0;
+
+		m_gltfTextureViews[i]->Release();
+		m_gltfTextureViews[i] = 0;
 	}
 }

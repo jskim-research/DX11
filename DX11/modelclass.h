@@ -53,6 +53,7 @@ private:
 	// std::vector<ID3D11ShaderResourceView*> m_gltfTextureViews;
 	ID3D11Texture2D** m_gltfTextures;
 	ID3D11ShaderResourceView** m_gltfTextureViews;
+	int m_gltfTextureNum;
 };
 
 #endif

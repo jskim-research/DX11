@@ -18,7 +18,8 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
-	float3 tex : TEXCOORD0;
+	float2 tex : TEXCOORD0;
+	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
 float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
@@ -28,21 +29,25 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 	float lightIntensity;
 	float4 color;
 
-	if (input.tex.z == 0)
+	if (input.imageIndex == 0)
 	{
 		textureColor = gltfTexture0.Sample(SampleType, input.tex.xy);
 	}
-	else if (input.tex.z == 1)
+	else if (input.imageIndex == 1)
 	{
 		textureColor = gltfTexture1.Sample(SampleType, input.tex.xy);
 	}
-	else if (input.tex.z == 2)
+	else if (input.imageIndex == 2)
 	{
 		textureColor = gltfTexture2.Sample(SampleType, input.tex.xy);
 	}
-	else
+	else if (input.imageIndex == 3)
 	{
 		textureColor = gltfTexture3.Sample(SampleType, input.tex.xy);
+	}
+	else	
+	{
+		textureColor = 0;
 	}
 
 	// textureColor = shaderTexture.Sample(SampleType, input.tex);
@@ -50,8 +55,8 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 	lightDir = -lightDirection;
 	lightIntensity = saturate(dot(lightDir, input.normal));
 
-	color = saturate(diffuseColor * lightIntensity);
-	color = color * textureColor;
+	// color = saturate(diffuseColor * lightIntensity);
+	// color = color * textureColor;
 
-	return color;
+	return textureColor;
 }
