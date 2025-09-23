@@ -1,4 +1,5 @@
 Texture2D shaderTexture : register(t0);
+Texture2DArray gltfTextures : register(t1);
 SamplerState SampleType : register(s0);
 
 cbuffer LightBuffer
@@ -12,8 +13,10 @@ cbuffer LightBuffer
 struct PixelInputType
 {
 	float4 position : SV_POSITION;
-	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
+	float4 color : COLOR;
+	float2 tex : TEXCOORD0;
+	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
 float4 LightPixelShader(PixelInputType input) : SV_TARGET
@@ -23,7 +26,7 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 	float lightIntensity;
 	float4 color;
 
-	textureColor = shaderTexture.Sample(SampleType, input.tex);
+	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
 	// 내적으로 사잇값 구하려면 invert 필요
 	lightDir = -lightDirection;
 	lightIntensity = saturate(dot(lightDir, input.normal));

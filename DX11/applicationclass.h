@@ -15,6 +15,7 @@
 #include "textureshaderclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
+#include "cartoonshaderclass.h"
 
 
 /////////////
@@ -47,4 +48,5 @@ private:
 	ModelClass* m_Model;
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+	CartoonShaderClass* m_CartoonShader;
 };

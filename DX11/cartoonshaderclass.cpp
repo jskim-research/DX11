@@ -1,6 +1,6 @@
-#include "lightshaderclass.h"
+#include "cartoonshaderclass.h"
 
-LightShaderClass::LightShaderClass()
+CartoonShaderClass::CartoonShaderClass()
 {
     m_vertexShader = 0;
     m_pixelShader = 0;
@@ -10,15 +10,15 @@ LightShaderClass::LightShaderClass()
     m_lightBuffer = 0;
 }
 
-LightShaderClass::LightShaderClass(const LightShaderClass&)
+CartoonShaderClass::CartoonShaderClass(const CartoonShaderClass&)
 {
 }
 
-LightShaderClass::~LightShaderClass()
+CartoonShaderClass::~CartoonShaderClass()
 {
 }
 
-bool LightShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
+bool CartoonShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 {
     wchar_t vsFilename[128];
     wchar_t psFilename[128];
@@ -26,14 +26,14 @@ bool LightShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
     bool result;
 
     // Set the filename of the vertex shader.
-    error = wcscpy_s(vsFilename, 128, L"./light.vs");
+    error = wcscpy_s(vsFilename, 128, L"./cartoon.vs");
     if (error != 0)
     {
         return false;
     }
 
     // Set the filename of the pixel shader.
-    error = wcscpy_s(psFilename, 128, L"./light.ps");
+    error = wcscpy_s(psFilename, 128, L"./cartoon.ps");
     if (error != 0)
     {
         return false;
@@ -49,12 +49,12 @@ bool LightShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
     return true;
 }
 
-void LightShaderClass::Shutdown()
+void CartoonShaderClass::Shutdown()
 {
     ShutdownShader();
 }
 
-bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor, ID3D11ShaderResourceView* gltfTextureArrayView)
+bool CartoonShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor, ID3D11ShaderResourceView* gltfTextureArrayView)
 {
     bool result;
 
@@ -71,7 +71,7 @@ bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount
     return true;
 }
 
-bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename , WCHAR* psFilename)
+bool CartoonShaderClass::InitializeShader(ID3D11Device * device, HWND hwnd, WCHAR * vsFilename, WCHAR * psFilename)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
@@ -89,7 +89,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
     pixelShaderBuffer = 0;
 
     // Compile the vertex shader code.
-    result = D3DCompileFromFile(vsFilename, NULL, NULL, "LightVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
+    result = D3DCompileFromFile(vsFilename, NULL, NULL, "CartoonVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
@@ -107,7 +107,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
     }
 
     // Compile the pixel shader code.
-    result = D3DCompileFromFile(psFilename, NULL, NULL, "LightPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+    result = D3DCompileFromFile(psFilename, NULL, NULL, "CartoonPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
     if (FAILED(result))
     {
         // If the shader failed to compile it should have writen something to the error message.
@@ -254,7 +254,7 @@ bool LightShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
     return true;
 }
 
-void LightShaderClass::ShutdownShader()
+void CartoonShaderClass::ShutdownShader()
 {
     // Release the light constant buffer.
     if (m_lightBuffer)
@@ -299,8 +299,9 @@ void LightShaderClass::ShutdownShader()
     }
 }
 
-void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+void CartoonShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
+
     char* compileErrors;
     unsigned __int64 bufferSize, i;
     ofstream fout;
@@ -333,8 +334,9 @@ void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 
 }
 
-bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor, ID3D11ShaderResourceView* gltfTextureArrayView)
+bool CartoonShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor, ID3D11ShaderResourceView* gltfTextureArrayView)
 {
+
     HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     unsigned int bufferNumber;
@@ -403,7 +405,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, X
     return true;
 }
 
-void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void CartoonShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
     // Set the vertex input layout.
     deviceContext->IASetInputLayout(m_layout);

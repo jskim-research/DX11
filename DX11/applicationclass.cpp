@@ -8,6 +8,7 @@ ApplicationClass::ApplicationClass()
 	m_Model = 0;
 	m_LightShader = 0;
 	m_Light = 0;
+	m_CartoonShader = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -64,6 +65,14 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_CartoonShader = new CartoonShaderClass;
+	result = m_CartoonShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the cartoon shader object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_Light = new LightClass;
 	m_Light->SetDiffuseColor(1, 1, 1, 1);
 	// m_Light->SetDirection(1, -1, 0);
@@ -85,6 +94,13 @@ void ApplicationClass::Shutdown()
 		m_LightShader->Shutdown();
 		delete m_LightShader;
 		m_LightShader = 0;
+	}
+
+	if (m_CartoonShader)
+	{
+		m_CartoonShader->Shutdown();
+		delete m_CartoonShader;
+		m_CartoonShader = 0;
 	}
 
 	// Release the Direct3D object.
@@ -156,7 +172,7 @@ bool ApplicationClass::Render(float rotation)
 	
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures());
+	result = m_CartoonShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures());
 	if (!result)
 	{
 		return false;
