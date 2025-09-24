@@ -36,6 +36,16 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 
 	output.normal = mul(input.normal, (float3x3)worldMatrix);
 	output.normal = normalize(output.normal);
+	
+	/*
+	float3 testNormal = normalize(mul(output.normal, (float3x3)viewMatrix));
+	if (dot(testNormal, float3(0, 0, 1)) > 0)
+	{
+		output.position = output.position + float4(output.normal, 0) * 0.05;
+		output.tex = -1;
+		output.normal = -output.normal;
+	}
+	*/
 
 	output.tex = input.tex;
 	output.imageIndex = input.imageIndex;

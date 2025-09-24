@@ -74,9 +74,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	m_Light = new LightClass;
+	// m_Light->SetDiffuseColor(1, 1, 1, 1);
 	m_Light->SetDiffuseColor(1, 1, 1, 1);
 	// m_Light->SetDirection(1, -1, 0);
-	m_Light->SetDirection(0, 0, 1);
+	m_Light->SetDirection(-1, -1, 1);
 
 	return true;
 }
@@ -165,14 +166,15 @@ bool ApplicationClass::Render(float rotation)
 	float scale = 0.07;
 	worldMatrix = XMMatrixScaling(scale, scale, scale);
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(rotation));
-	// worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(0.0174532925f * 180));
+	// worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(0.0174532925f * 160));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0, -1, -13));
+
 
 	// S R T
 	
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	result = m_CartoonShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures());
+	result = m_CartoonShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures(), m_Camera->GetPosition());
 	if (!result)
 	{
 		return false;
