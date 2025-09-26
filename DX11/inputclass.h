@@ -19,6 +19,7 @@ public:
 	void KeyUp(unsigned int);
 	void Wheel(short delta);
 
+
 	bool IsKeyDown(unsigned int);
 	bool IsWheelUp() const;
 	bool IsWheelDown() const;

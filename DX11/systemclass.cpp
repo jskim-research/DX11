@@ -154,16 +154,24 @@ bool SystemClass::Frame()
 		return false;
 	}
 
-	if (m_Input->IsWheelUp())
+	if (m_Input->IsKeyDown('W'))
 	{
-		m_Application->MoveCamera(0.1);
-		m_Input->ResetWheel();
+		m_Application->MoveCameraForward(0.1);
 	}
 
-	if (m_Input->IsWheelDown())
+	if (m_Input->IsKeyDown('S'))
 	{
-		m_Application->MoveCamera(-0.1);
-		m_Input->ResetWheel();
+		m_Application->MoveCameraForward(-0.1);
+	}
+
+	if (m_Input->IsKeyDown('A'))
+	{
+		m_Application->MoveCameraRight(-0.1);
+	}
+
+	if (m_Input->IsKeyDown('D'))
+	{
+		m_Application->MoveCameraRight(0.1);
 	}
 
 	// Do the frame processing for the application class object.

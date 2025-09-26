@@ -1,7 +1,10 @@
 #include "inputclass.h"
 
-InputClass::InputClass()
+InputClass::InputClass():
+	m_isWheelDown(false),
+	m_isWheelUp(false)
 {
+
 }
 
 InputClass::InputClass(const InputClass&)
@@ -49,6 +52,7 @@ void InputClass::Wheel(short delta)
 bool InputClass::IsKeyDown(unsigned int key)
 {	
 	// Return what state the key is in (pressed/not pressed).
+
 	return m_keys[key];
 }
 

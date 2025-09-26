@@ -37,6 +37,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	m_Camera = new CameraClass;
 	m_Camera->SetPosition(0.0f, 0.0f, -15.0f);
+	m_Camera->SetRotation(0, 0, 0);
 
 	m_Model = new ModelClass;
 	strcpy_s(textureFilename, "./data/stone01.tga");
@@ -145,10 +146,24 @@ bool ApplicationClass::Frame()
 	}
 }
 
-void ApplicationClass::MoveCamera(float delta)
+void ApplicationClass::MoveCameraForward(float delta)
 {
+	XMFLOAT3 rotation = m_Camera->GetRotation();
+	XMMATRIX rotationMat = XMMatrixRotationRollPitchYaw(rotation.x * 0.0174532925f, rotation.y * 0.0174532925f, rotation.z * 0.0174532925f);
 	XMFLOAT3 position = m_Camera->GetPosition();
-	m_Camera->SetPosition(position.x, position.y, position.z + delta);
+	XMFLOAT3 forwardVector;
+	XMStoreFloat3(&forwardVector, rotationMat.r[2]);
+	m_Camera->SetPosition(position.x + forwardVector.x * delta, position.y + forwardVector.y * delta, position.z + forwardVector.z * delta);
+}
+
+void ApplicationClass::MoveCameraRight(float delta)
+{
+	XMFLOAT3 rotation = m_Camera->GetRotation();
+	XMMATRIX rotationMat = XMMatrixRotationRollPitchYaw(rotation.x * 0.0174532925f, rotation.y * 0.0174532925f, rotation.z * 0.0174532925f);
+	XMFLOAT3 position = m_Camera->GetPosition();
+	XMFLOAT3 rightVector;
+	XMStoreFloat3(&rightVector, rotationMat.r[0]);
+	m_Camera->SetPosition(position.x + rightVector.x * delta, position.y + rightVector.y * delta, position.z + rightVector.z * delta);
 }
 
 bool ApplicationClass::Render(float rotation)
