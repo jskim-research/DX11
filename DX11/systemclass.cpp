@@ -128,6 +128,13 @@ LRESULT SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 		return 0;
 	}
 
+	case WM_MOUSEWHEEL:
+	{
+		short delta = GET_WHEEL_DELTA_WPARAM(wparam);
+		m_Input->Wheel(delta);
+		return 0;
+	}
+
 	// Any other messages send to the default message handler as our application won't make use of them.
 	default:
 	{
@@ -139,12 +146,24 @@ LRESULT SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 bool SystemClass::Frame()
 {
 	bool result;
-
+	
 
 	// Check if the user pressed escape and wants to exit the application.
 	if (m_Input->IsKeyDown(VK_ESCAPE))
 	{
 		return false;
+	}
+
+	if (m_Input->IsWheelUp())
+	{
+		m_Application->MoveCamera(0.1);
+		m_Input->ResetWheel();
+	}
+
+	if (m_Input->IsWheelDown())
+	{
+		m_Application->MoveCamera(-0.1);
+		m_Input->ResetWheel();
 	}
 
 	// Do the frame processing for the application class object.

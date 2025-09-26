@@ -17,11 +17,17 @@ public:
 
 	void KeyDown(unsigned int);
 	void KeyUp(unsigned int);
+	void Wheel(short delta);
 
 	bool IsKeyDown(unsigned int);
+	bool IsWheelUp() const;
+	bool IsWheelDown() const;
+	void ResetWheel();
 
 private:
 	bool m_keys[256];
+	bool m_isWheelUp;
+	bool m_isWheelDown;
 };
 
 #endif
