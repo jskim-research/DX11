@@ -36,50 +36,82 @@ float CustomStep(float y, float x, float defaultValue)
 	else return defaultValue;
 }
 
-float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
+float4 CalculateDiffuse(float3 _lightDirection, float3 _normal)
 {
-	float4 textureColor;
-	// diffuse 계산용
-	float3 lightDir;
-	float lightIntensity;
-	float4 color;
+	float lightIntensity = saturate(dot(-_lightDirection, _normal));
+	return lightIntensity;
+}
 
+float4 CalculateCartoonDiffuse(float3 _lightDirection, float3 _normal)
+{
 	// 카툰 렌더링 명암 계산용
 	float4 gradientMap;
 	float4 startColor = float4(0, 0, 0, 1);
 	float4 endColor = float4(1, 1, 1, 1);
-
-	// specular 계산용
-	float3 viewDirection;
-	float3 reflectionLight;
-	float3 halfVector;
-	// roughness ~ sqrt(2 / shininess)
-	// shininess = 50 은 roughness 0.2 정도임
-	float specularShininess = 50;
-	float specular;
-	float4 specularColor = float4(1, 1, 1, 1);
-
-	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
-	lightDir = -lightDirection;
-	lightIntensity = saturate(dot(lightDir, input.normal));
+	float lightIntensity = saturate(dot(-_lightDirection, _normal));
 
 	gradientMap = step(0.1, lightIntensity);
 	gradientMap = (1 - gradientMap) * startColor + gradientMap * endColor;
 
-	// Phong Specular BRDF
-	viewDirection = normalize(cameraLocation - input.position.xyz);
-	reflectionLight = normalize(2 * dot(lightDir, input.normal) * input.normal - lightDir);
-	// dot 값 saturate 해야 음수값이 0으로 처리됨
-	// 음수값을 0으로 치환해버리므로 특정 부분에서 부자연스럽게 변화
-	// specular = pow(saturate(dot(viewDirection, reflectionLight)), specularShininess);
+	return gradientMap;
+}
 
-	// Blinn-Phong Specular BRDF
-	halfVector = normalize(lightDir + viewDirection);
-	// 기존엔 음수값인 부분을 정상적으로 specular 에 편입
-	// 자연스러운 변화
-	specular = pow(saturate(dot(halfVector, input.normal)), specularShininess);
+float CalculatePhongSpecular(float3 _cameraLocation, PixelInputType _input, float3 _lightDirection, float _specularShininess)
+{
+	float3 viewDirection;
+	float3 reflectionLight;
+	// roughness ~ sqrt(2 / shininess)
+	// shininess = 50 은 roughness 0.2 정도임
+	float specular;
+	float4 specularColor = float4(1, 1, 1, 1);
+	float lightIntensity = saturate(dot(-_lightDirection, _input.normal));
 
-	color = textureColor * gradientMap;
-	color = color + specularColor * specular;
+	viewDirection = normalize(_cameraLocation - _input.position.xyz);
+	reflectionLight = normalize(2 * dot(-_lightDirection, _input.normal) * _input.normal + _lightDirection);
+
+	if (lightIntensity <= 0) 
+		// 애초에 반사가 안되는 상황
+		specular = 0;
+	else
+		// dot 값 saturate 해야 음수값이 0으로 처리됨
+		// 음수값을 0으로 치환해버리므로 특정 부분에서 부자연스럽게 변화
+		specular = pow(max(dot(viewDirection, reflectionLight), 0), _specularShininess);
+
+	return specular;
+}
+
+float CalculateBlinnPhongSpecular(float3 _cameraLocation, PixelInputType _input, float3 _lightDirection, float _specularShininess)
+{
+	float3 viewDirection = normalize(_cameraLocation - _input.position.xyz);
+	float3 reflectionLight = normalize(2 * dot(-_lightDirection, _input.normal) * _input.normal + _lightDirection);
+	float3 halfVector = normalize(-_lightDirection + viewDirection);
+	float specular;
+	float lightIntensity = saturate(dot(-_lightDirection, _input.normal));
+
+	if (lightIntensity <= 0)
+		specular = 0;
+	else
+		// Phong specular 와 달리 음수가 되는 경우 없이 전부 반영
+		specular = pow(saturate(dot(halfVector, _input.normal)), _specularShininess);
+	return specular; 
+}
+
+float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
+{	
+	float4 color;
+	float4 textureColor;
+
+	float4 ambient = float4(0.1, 0.1, 0.1, 1);
+	float4 diffuse;
+	float specular;
+	float4 specularColor = float4(1, 1, 1, 1);
+
+	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
+
+	diffuse = CalculateCartoonDiffuse(lightDirection, input.normal);
+	// specular = CalculatePhongSpecular(cameraLocation, input, lightDirection, 50);	
+	specular = CalculateBlinnPhongSpecular(cameraLocation, input, lightDirection, 50);
+
+	color = textureColor * (ambient + diffuse) + specularColor * specular;
 	return color;
 }
