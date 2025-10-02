@@ -174,6 +174,16 @@ bool SystemClass::Frame()
 		m_Application->MoveCameraRight(0.1);
 	}
 
+	if (m_Input->IsKeyDown('Q'))
+	{
+		m_Application->MoveCameraUp(-0.1);
+	}
+
+	if (m_Input->IsKeyDown('E'))
+	{
+		m_Application->MoveCameraUp(0.1);
+	}
+
 	// Do the frame processing for the application class object.
 	result = m_Application->Frame();
 	if (!result)

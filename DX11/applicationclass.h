@@ -39,8 +39,10 @@ public:
 	void Shutdown();
 	bool Frame();
 
+	// view matrix 이후엔 z 축이 forward, x 축이 right, y 축이 up 임
 	void MoveCameraForward(float delta);
 	void MoveCameraRight(float delta);
+	void MoveCameraUp(float delta);
 
 private:
 	bool Render(float);
@@ -50,6 +52,7 @@ private:
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
 	LightShaderClass* m_LightShader;
-	LightClass* m_Light;
+	LightClass* m_DirectionalLight;
 	CartoonShaderClass* m_CartoonShader;
+	struct CartoonShaderInput* m_CartoonShaderInput;
 };

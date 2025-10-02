@@ -22,6 +22,11 @@ void LightClass::SetDirection(float x, float y, float z)
     m_direction = XMFLOAT3(x, y, z);
 }
 
+void LightClass::SetPosition(float x, float y, float z)
+{
+    m_position = XMFLOAT3(x, y, z);
+}
+
 XMFLOAT4 LightClass::GetDiffuseColor()
 {
     return m_diffuseColor;
@@ -30,4 +35,9 @@ XMFLOAT4 LightClass::GetDiffuseColor()
 XMFLOAT3 LightClass::GetDirection()
 {
     return m_direction;
+}
+
+XMFLOAT3 LightClass::GetPosition()
+{
+    return m_position;
 }

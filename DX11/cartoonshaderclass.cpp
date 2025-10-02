@@ -1,4 +1,5 @@
 #include "cartoonshaderclass.h"
+#include "cartoonshaderinput.h"
 
 CartoonShaderClass::CartoonShaderClass()
 {
@@ -54,19 +55,19 @@ void CartoonShaderClass::Shutdown()
     ShutdownShader();
 }
 
-bool CartoonShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor, ID3D11ShaderResourceView* gltfTextureArrayView, XMFLOAT3 cameraLocation)
+bool CartoonShaderClass::Render(CartoonShaderInput* Input, int indexCount)
 {
     bool result;
-
+    
     // Set the shader parameters that it will use for rendering.
-    result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, diffuseColor, gltfTextureArrayView, cameraLocation);
+    result = SetShaderParameters(Input);
     if (!result)
     {
         return false;
     }
 
     // Now render the prepared buffers with the shader.
-    RenderShader(deviceContext, indexCount);
+    RenderShader(Input->deviceContext, indexCount);
 
     return true;
 }
@@ -353,7 +354,7 @@ void CartoonShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 
 }
 
-bool CartoonShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor, ID3D11ShaderResourceView* gltfTextureArrayView, XMFLOAT3 cameraLocation)
+bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
 {
 
     HRESULT result;
@@ -364,12 +365,12 @@ bool CartoonShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
     CameraBufferType* dataPtr3;
 
     // Transpose the matrices to prepare them for the shader.
-    worldMatrix = XMMatrixTranspose(worldMatrix);
-    viewMatrix = XMMatrixTranspose(viewMatrix);
-    projectionMatrix = XMMatrixTranspose(projectionMatrix);
+    Input->worldMatrix = XMMatrixTranspose(Input->worldMatrix);
+    Input->viewMatrix = XMMatrixTranspose(Input->viewMatrix);
+    Input->projectionMatrix = XMMatrixTranspose(Input->projectionMatrix);
 
     // Lock the constant buffer so it can be written to.
-    result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    result = Input->deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
     if (FAILED(result))
     {
         return false;
@@ -379,27 +380,27 @@ bool CartoonShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
     dataPtr = (MatrixBufferType*)mappedResource.pData;
 
     // Copy the matrices into the constant buffer.
-    dataPtr->world = worldMatrix;
-    dataPtr->view = viewMatrix;
-    dataPtr->projection = projectionMatrix;
+    dataPtr->world = Input->worldMatrix;
+    dataPtr->view = Input->viewMatrix;
+    dataPtr->projection = Input->projectionMatrix;
 
     // Unlock the constant buffer.
-    deviceContext->Unmap(m_matrixBuffer, 0);
+    Input->deviceContext->Unmap(m_matrixBuffer, 0);
 
     // Set the position of the constant buffer in the vertex shader.
     bufferNumber = 0;
 
     // Now set the constant buffer in the vertex shader with the updated values.
-    deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
+    Input->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
     // Set shader texture resource in the pixel shader.
-    deviceContext->PSSetShaderResources(0, 1, &texture);
+    Input->deviceContext->PSSetShaderResources(0, 1, &Input->texture);
 
-    deviceContext->PSSetShaderResources(1, 1, &gltfTextureArrayView);
+    Input->deviceContext->PSSetShaderResources(1, 1, &Input->gltfTextureArrayView);
 
 
     // Lock the light constant buffer so it can be written to.
-    result = deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    result = Input->deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
     if (FAILED(result))
     {
         return false;
@@ -409,28 +410,32 @@ bool CartoonShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
     dataPtr2 = (LightBufferType*)mappedResource.pData;
 
     // Copy the lighting variables into the constant buffer.
-    dataPtr2->diffuseColor = diffuseColor;
-    dataPtr2->lightDirection = lightDirection;
+    dataPtr2->diffuseColor = Input->directionalLight->GetDiffuseColor();
+    dataPtr2->lightDirection = Input->directionalLight->GetDirection();
     dataPtr2->padding = 0.0f;
 
     // Unlock the constant buffer.
-    deviceContext->Unmap(m_lightBuffer, 0);
+    Input->deviceContext->Unmap(m_lightBuffer, 0);
 
-    result = deviceContext->Map(m_cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    result = Input->deviceContext->Map(m_cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
     dataPtr3 = (CameraBufferType*)mappedResource.pData;
 
-    dataPtr3->cameraLocation = cameraLocation;
+    dataPtr3->cameraLocation = Input->cameraLocation;
     dataPtr3->padding = 0.0f;
-    deviceContext->Unmap(m_cameraBuffer, 0);
+    Input->deviceContext->Unmap(m_cameraBuffer, 0);
 
     // Set the position of the light constant buffer in the pixel shader.
     bufferNumber = 0;
-
     // Finally set the light constant buffer in the pixel shader with the updated values.
-    deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
+    Input->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
 
     bufferNumber = 1;
-    deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
+    Input->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
 
     return true;
 }

@@ -1,4 +1,5 @@
 #include "applicationclass.h"
+#include "cartoonshaderinput.h"
 #include <fstream>
 
 ApplicationClass::ApplicationClass()
@@ -7,7 +8,7 @@ ApplicationClass::ApplicationClass()
 	m_Camera = 0;
 	m_Model = 0;
 	m_LightShader = 0;
-	m_Light = 0;
+	m_DirectionalLight = 0;
 	m_CartoonShader = 0;
 }
 
@@ -74,19 +75,27 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	m_Light = new LightClass;
-	m_Light->SetDiffuseColor(1, 1, 1, 1);
-	m_Light->SetDirection(-1, -1, 1);
+	m_DirectionalLight = new LightClass;
+	m_DirectionalLight->SetDiffuseColor(1, 1, 1, 1);
+	m_DirectionalLight->SetDirection(-1, -1, 1);
+
+	m_CartoonShaderInput = new CartoonShaderInput;
 
 	return true;
 }
 
 void ApplicationClass::Shutdown()
 {
-	if (m_Light)
+	if (m_CartoonShaderInput)
 	{
-		delete m_Light;
-		m_Light = 0;
+		delete m_CartoonShaderInput;
+		m_CartoonShaderInput = 0;
+	}
+
+	if (m_DirectionalLight)
+	{
+		delete m_DirectionalLight;
+		m_DirectionalLight = 0;
 	}
 
 	if (m_LightShader)
@@ -166,6 +175,16 @@ void ApplicationClass::MoveCameraRight(float delta)
 	m_Camera->SetPosition(position.x + rightVector.x * delta, position.y + rightVector.y * delta, position.z + rightVector.z * delta);
 }
 
+void ApplicationClass::MoveCameraUp(float delta)
+{
+	XMFLOAT3 rotation = m_Camera->GetRotation();
+	XMMATRIX rotationMat = XMMatrixRotationRollPitchYaw(rotation.x * 0.0174532925f, rotation.y * 0.0174532925f, rotation.z * 0.0174532925f);
+	XMFLOAT3 position = m_Camera->GetPosition();
+	XMFLOAT3 rightVector;
+	XMStoreFloat3(&rightVector, rotationMat.r[1]);
+	m_Camera->SetPosition(position.x + rightVector.x * delta, position.y + rightVector.y * delta, position.z + rightVector.z * delta);
+}
+
 bool ApplicationClass::Render(float rotation)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
@@ -187,7 +206,7 @@ bool ApplicationClass::Render(float rotation)
 	// 행렬이 곱해지는 순서가 SRT 가 되도록 한다.
 	// row major 이므로 왼쪽부터 곱해짐
 
-	scaleMatrix = XMMatrixScaling(0.07, 0.07, 0.07);
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
 	rotateMatrix = XMMatrixRotationY(rotation);
 	// rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
@@ -204,7 +223,16 @@ bool ApplicationClass::Render(float rotation)
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	result = m_CartoonShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures(), m_Camera->GetPosition());
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	m_CartoonShaderInput->texture = m_Model->GetTexture();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 	{
 		return false;
@@ -214,12 +242,20 @@ bool ApplicationClass::Render(float rotation)
 	translateMatrix = XMMatrixTranslation(0.5, -1, -13);
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
 
-	result = m_CartoonShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor(), m_Model->GetGltfTextures(), m_Camera->GetPosition());
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	m_CartoonShaderInput->texture = m_Model->GetTexture();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 	{
 		return false;
 	}
-
 
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
