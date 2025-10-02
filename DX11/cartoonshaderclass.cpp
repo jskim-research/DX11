@@ -415,7 +415,7 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
     Input->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
     // Set shader texture resource in the pixel shader.
-    Input->deviceContext->PSSetShaderResources(0, 1, &Input->texture);
+    // Input->deviceContext->PSSetShaderResources(0, 1, &Input->texture);
 
     Input->deviceContext->PSSetShaderResources(1, 1, &Input->gltfTextureArrayView);
 

@@ -15,7 +15,7 @@ TextureClass::~TextureClass()
 {
 }
 
-bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename)
 {
     bool result;
     int height, width;
@@ -57,9 +57,11 @@ bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
     deviceContext->UpdateSubresource(m_texture, 0, NULL, m_targaData, rowPitch, 0);
     // Setup the shader resource view description.
     srvDesc.Format = textureDesc.Format;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = -1;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+    srvDesc.Texture2DArray.MostDetailedMip = 0;
+    srvDesc.Texture2DArray.MipLevels = -1;
+    srvDesc.Texture2DArray.FirstArraySlice = 0;
+    srvDesc.Texture2DArray.ArraySize = 1;
 
     // Create the shader resource view for the texture.
     hResult = device->CreateShaderResourceView(m_texture, &srvDesc, &m_textureView);
@@ -117,7 +119,7 @@ int TextureClass::GetHeight()
     return m_height;
 }
 
-bool TextureClass::LoadTarga32Bit(char* filename)
+bool TextureClass::LoadTarga32Bit(const char* filename)
 {
     int error, bpp, imageSize, index, i, j, k;
     FILE* filePtr;

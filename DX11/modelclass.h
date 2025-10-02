@@ -7,10 +7,9 @@
 using namespace DirectX;
 
 #include "textureclass.h"
+#include "objectparser.h"
 
 // using CurVertexType = ObjectParser::... 맞춰줘야할듯
-
-class ObjectParser;
 
 class ModelClass
 {
@@ -21,36 +20,45 @@ private:
 		XMFLOAT2 texture;
 		XMFLOAT3 normal;
 	};
+
+private:
+	// 복사 금지
+	ModelClass(const ModelClass&);
+
 public:
 	ModelClass();
-	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
-
 	ID3D11ShaderResourceView* GetGltfTextures();
+
+	bool ImportFromGLTF(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* fileName);
+	bool ImportFromCustomFile(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* fileName, const char* textureFileName);
 
 private:
 	bool InitializeBuffers(ID3D11Device*, ID3D11DeviceContext*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
-	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, const char*);
 	void ReleaseTexture();
+
+	bool MakeVertexBuffer(ID3D11Device* device, ObjectParser::CommonVertexType* vertices);
+	bool MakeIndexBuffer(ID3D11Device* device, unsigned long* indices);
 
 private:
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
 	int m_vertexCount, m_indexCount;
 	TextureClass* m_Texture;
 	ObjectParser* m_objectParser;
-
 	ID3D11Texture2D* m_textureArray;
 	ID3D11ShaderResourceView* m_textureArrayView;
+	// Input layout desc 를 import 한 vertex buffer, index buffer 에 맞게 할당
+	D3D11_INPUT_ELEMENT_DESC* m_polygonLayout;
 };
 
 #endif

@@ -24,6 +24,8 @@ ApplicationClass::~ApplicationClass()
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	char textureFilename[128];
+	char objFileName1[128];
+	char objFileName2[128];
 	bool result;
 
 
@@ -42,11 +44,15 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetRotation(0, 0, 0);
 
 	m_Model = new ModelClass;
+	strcpy_s(objFileName1, "./data/burnice.glb");
+	strcpy_s(objFileName2, "./data/Cube.txt");
 	strcpy_s(textureFilename, "./data/stone01.tga");
-	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
+	// result = m_Model->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName2, textureFilename);
+	result = m_Model->ImportFromGLTF(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName1);
+	// result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
 	if (!result)
 	{
-		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not import the model object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -246,7 +252,7 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	m_CartoonShaderInput->texture = m_Model->GetTexture();
+	// m_CartoonShaderInput->texture = m_Model->GetTexture();
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
@@ -267,7 +273,7 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	m_CartoonShaderInput->texture = m_Model->GetTexture();
+	// m_CartoonShaderInput->texture = m_Model->GetTexture();
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;

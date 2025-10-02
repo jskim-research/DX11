@@ -1,3 +1,4 @@
+// px, py, pz, tu, tv, nx, ny, nz
 Vertex Count: 36
 
 Data:

@@ -11,14 +11,7 @@ using namespace DirectX;
 class ObjectParser
 {
 public:
-	struct VertexType
-	{
-		XMFLOAT3 position;
-		XMFLOAT2 texture;
-		XMFLOAT3 normal;
-	};
-
-	struct GltfVertexType
+	struct CommonVertexType
 	{
 		XMFLOAT3 position;
 		XMFLOAT3 normal;
@@ -29,9 +22,10 @@ public:
 
 public:
 	ObjectParser();
-	bool ParseCustomFile(const char* fileName, VertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount);
-	bool ParseCustomFile2(const char* fileName, VertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount);
-	bool ParseGLTFFile(const char* fileName, GltfVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount, std::vector<tinygltf::Image>& images);
+	bool ParseCustomFile(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount);
+	// from rastertek tutorial
+	bool ParseCustomFile2(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount);
+	bool ParseGLTFFile(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount, std::vector<tinygltf::Image>& images);
 	bool ExtractTexturesFromGLB(const char* glbFilePath, const char* outputFolder);
 
 private:

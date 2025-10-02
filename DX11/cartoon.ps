@@ -122,6 +122,26 @@ float CalculateBlinnPhongSpecular(float3 _cameraLocation, PixelInputType _input,
 	return specular; 
 }
 
+float CalculatePointLightBlinnPhongSpecular(float3 _cameraLocation, PixelInputType _input, float3 _lightPosition, float3 _attenuationFactors, float _specularShininess)
+{
+	float3 _lightDirection = _lightPosition - _input.worldPosition.xyz;
+	float dist = length(_lightDirection);
+	_lightDirection = normalize(_lightDirection);
+	float3 viewDirection = normalize(_cameraLocation - _input.worldPosition.xyz);
+	float3 reflectionLight = normalize(2 * dot(-_lightDirection, _input.normal) * _input.normal + _lightDirection);
+	float3 halfVector = normalize(-_lightDirection + viewDirection);
+	float specular;
+	float lightIntensity = saturate(dot(-_lightDirection, _input.normal));
+
+	if (lightIntensity <= 0)
+		specular = 0;
+	else
+		// Phong specular 와 달리 음수가 되는 경우 없이 전부 반영
+		specular = pow(saturate(dot(halfVector, _input.normal)), _specularShininess);
+	specular /= (dot(_attenuationFactors, float3(1, dist, pow(dist,2))));
+	return specular; 
+}
+
 float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 {	
 	float4 color;
@@ -134,17 +154,25 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 
 	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
 
-	ambient = 0;
 	diffuse = 0;
+	specular = 0;
+	
+	// directional light
+	/*
+	diffuse += diffuseColor * CalculateDiffuse(lightDirection, input.normal);
+	// specular += CalculatePhongSpecular(cameraLocation, input, lightDirection, 50);	
+	specular += CalculateBlinnPhongSpecular(cameraLocation, input, lightDirection, 50);
+	diffuse = step(0.1, diffuse);
+	*/
+	
+	// point lights
+	// 여기엔 step(0.1, diffuse) 적용 시 약간 어색한 부분이 있어서
+	// directional light 에만 적용해둔 상태
 	for (int i=0; i<NUM_LIGHTS; i++)
 	{
 		diffuse += pointLights[i].diffuseColor * CalculatePointLightDiffuse(pointLights[i].position, input.worldPosition, input.normal, pointLights[i].attenuationFactors);
+		specular += CalculatePointLightBlinnPhongSpecular(cameraLocation, input, pointLights[i].position, pointLights[i].attenuationFactors, 50);
 	}
-
-	diffuse = step(0.1, diffuse);
-	// specular = CalculatePhongSpecular(cameraLocation, input, lightDirection, 50);	
-	// specular = CalculateBlinnPhongSpecular(cameraLocation, input, lightDirection, 50);
-	specular = 0;
 
 	color = textureColor * (ambient + diffuse) + specularColor * specular;
 	return color;

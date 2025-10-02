@@ -18,7 +18,7 @@ ObjectParser::ObjectParser()
     writeFile.close();
 }
 
-bool ObjectParser::ParseCustomFile(const char* fileName, VertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount)
+bool ObjectParser::ParseCustomFile(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount)
 {
     ifstream readFile;
     bool isSuccess = false;
@@ -52,7 +52,7 @@ bool ObjectParser::ParseCustomFile(const char* fileName, VertexType** vertices, 
                     // stoi 실패할 가능성 있을거같은데 어떻게 처리?
                     string valueString = str.substr(valueIndex + 1, str.size() - valueIndex - 1);                    
                     maxVertexCount = stoi(valueString);
-                    (*vertices) = new VertexType[maxVertexCount];
+                    (*vertices) = new CommonVertexType[maxVertexCount];
                     (*indices) = new unsigned long[maxVertexCount];
                 }
             }
@@ -127,7 +127,7 @@ bool ObjectParser::ParseCustomFile(const char* fileName, VertexType** vertices, 
     return isSuccess;
 }
 
-bool ObjectParser::ParseCustomFile2(const char* fileName, VertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount)
+bool ObjectParser::ParseCustomFile2(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount)
 {
     ifstream file;
     char c;
@@ -145,7 +145,7 @@ bool ObjectParser::ParseCustomFile2(const char* fileName, VertexType** vertices,
 
         file >> count;
 
-        (*vertices) = new VertexType[count];
+        (*vertices) = new CommonVertexType[count];
         (*indices) = new unsigned long[count];
 
         file.get(c);
@@ -167,6 +167,8 @@ bool ObjectParser::ParseCustomFile2(const char* fileName, VertexType** vertices,
             file >> (*vertices)[i].normal.y;
             file >> (*vertices)[i].normal.z;
 
+            (*vertices)[i].imageIndex = 0;
+
             (*indices)[i] = i;
         }
 
@@ -179,7 +181,7 @@ bool ObjectParser::ParseCustomFile2(const char* fileName, VertexType** vertices,
     return isSuccess;
 }
 
-bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount, std::vector<tinygltf::Image>& images)
+bool ObjectParser::ParseGLTFFile(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount, std::vector<tinygltf::Image>& images)
 {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
@@ -233,7 +235,7 @@ bool ObjectParser::ParseGLTFFile(const char* fileName, GltfVertexType** vertices
         }
     }
 
-    *vertices = new GltfVertexType[totalVertexCount];
+    *vertices = new CommonVertexType[totalVertexCount];
     *indices = new unsigned long[totalIndexCount];
 
     size_t vertexOffset = 0;
