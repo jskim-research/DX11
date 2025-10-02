@@ -17,6 +17,7 @@ struct VertexInputType
 struct PixelInputType
 {
 	float4 position : SV_POSITION;
+	float3 worldPosition : POSITION;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
@@ -29,6 +30,7 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 	input.position.w = 1.0f;
 	
 	output.position = mul(input.position, worldMatrix);
+	output.worldPosition = output.position;
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 

@@ -1,8 +1,10 @@
+#define NUM_LIGHTS 4
+
 Texture2D shaderTexture : register(t0);
 Texture2DArray gltfTextures : register(t1);
 SamplerState SampleType : register(s0);
 
-cbuffer LightBuffer
+cbuffer LightBuffer : register(b0)
 {
 	float4 diffuseColor;
 	float3 lightDirection;
@@ -10,15 +12,30 @@ cbuffer LightBuffer
 	float padding;
 };
 
-cbuffer CameraBuffer
+cbuffer CameraBuffer : register(b1)
 {
 	float3 cameraLocation;
 	float cameraPadding;
 };
 
+struct PointLightBufferType
+{
+	float4 diffuseColor;
+	float3 position;
+	float padding1;
+	float3 attenuationFactors;
+	float padding2;
+};
+
+cbuffer PointLightBuffer : register(b2)
+{
+	PointLightBufferType pointLights[NUM_LIGHTS];
+};
+
 struct PixelInputType
 {
 	float4 position : SV_POSITION;
+	float3 worldPosition : POSITION;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
@@ -40,6 +57,15 @@ float4 CalculateDiffuse(float3 _lightDirection, float3 _normal)
 {
 	float lightIntensity = saturate(dot(-_lightDirection, _normal));
 	return lightIntensity;
+}
+
+float4 CalculatePointLightDiffuse(float3 _lightPosition, float3 _inputPosition, float3 _inputNormal, float3 _attenuationFactors)
+{
+	float3 lightDirection = _lightPosition - _inputPosition;
+	float lightIntensity = saturate(dot(normalize(lightDirection), _inputNormal));
+	float dist = length(lightDirection);
+
+	return lightIntensity / dot(_attenuationFactors, float3(1, dist, pow(dist,2)));	
 }
 
 float4 CalculateCartoonDiffuse(float3 _lightDirection, float3 _normal)
@@ -108,9 +134,17 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 
 	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
 
-	diffuse = CalculateCartoonDiffuse(lightDirection, input.normal);
+	ambient = 0;
+	diffuse = 0;
+	for (int i=0; i<NUM_LIGHTS; i++)
+	{
+		diffuse += pointLights[i].diffuseColor * CalculatePointLightDiffuse(pointLights[i].position, input.worldPosition, input.normal, pointLights[i].attenuationFactors);
+	}
+
+	diffuse = step(0.1, diffuse);
 	// specular = CalculatePhongSpecular(cameraLocation, input, lightDirection, 50);	
-	specular = CalculateBlinnPhongSpecular(cameraLocation, input, lightDirection, 50);
+	// specular = CalculateBlinnPhongSpecular(cameraLocation, input, lightDirection, 50);
+	specular = 0;
 
 	color = textureColor * (ambient + diffuse) + specularColor * specular;
 	return color;

@@ -5,6 +5,7 @@
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include "lightclass.h"
+#include "pointlightclass.h"
 
 using namespace DirectX;
 using namespace std;
@@ -16,9 +17,11 @@ struct CartoonShaderInput
 	XMMATRIX viewMatrix; 
 	XMMATRIX projectionMatrix;
 	ID3D11ShaderResourceView* texture; 
-	LightClass* directionalLight;
 	ID3D11ShaderResourceView* gltfTextureArrayView;
 	XMFLOAT3 cameraLocation;
+	LightClass* directionalLight;
+	PointLightClass* pointLights;
+	int pointLightsNum;
 };
 
 

@@ -9,6 +9,7 @@ CartoonShaderClass::CartoonShaderClass()
     m_sampleState = 0;
     m_matrixBuffer = 0;
     m_lightBuffer = 0;
+    m_pointLightBuffer = 0;
 }
 
 CartoonShaderClass::CartoonShaderClass(const CartoonShaderClass&)
@@ -83,6 +84,7 @@ bool CartoonShaderClass::InitializeShader(ID3D11Device * device, HWND hwnd, WCHA
     D3D11_SAMPLER_DESC samplerDesc;
     D3D11_BUFFER_DESC matrixBufferDesc;
     D3D11_BUFFER_DESC lightBufferDesc;
+    D3D11_BUFFER_DESC pointLightBufferDesc;
     D3D11_BUFFER_DESC cameraBufferDesc;
 
     // Initialize the pointers this function will use to null.
@@ -266,11 +268,29 @@ bool CartoonShaderClass::InitializeShader(ID3D11Device * device, HWND hwnd, WCHA
         return false;
     }
 
+    pointLightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    pointLightBufferDesc.ByteWidth = sizeof(PointLightBuffer);
+    pointLightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    pointLightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    pointLightBufferDesc.MiscFlags = 0;
+    pointLightBufferDesc.StructureByteStride = 0;
+    result = device->CreateBuffer(&pointLightBufferDesc, NULL, &m_pointLightBuffer);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
     return true;
 }
 
 void CartoonShaderClass::ShutdownShader()
 {
+    if (m_pointLightBuffer)
+    {
+        m_pointLightBuffer->Release();
+        m_pointLightBuffer = 0;
+    }
+
     // Release the light constant buffer.
     if (m_lightBuffer)
     {
@@ -363,6 +383,7 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
     MatrixBufferType* dataPtr;
     LightBufferType* dataPtr2;
     CameraBufferType* dataPtr3;
+    PointLightBuffer* pointLightPtr;
 
     // Transpose the matrices to prepare them for the shader.
     Input->worldMatrix = XMMatrixTranspose(Input->worldMatrix);
@@ -429,6 +450,33 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
     dataPtr3->padding = 0.0f;
     Input->deviceContext->Unmap(m_cameraBuffer, 0);
 
+    result = Input->deviceContext->Map(m_pointLightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (FAILED(result))
+    {
+        return false;
+    }
+    pointLightPtr = (PointLightBuffer*)mappedResource.pData;
+    for (int i = 0; i < NUM_LIGHTS; i++)
+    {
+        if (i >= Input->pointLightsNum)
+        {
+            pointLightPtr->lights[i].diffuseColor = XMFLOAT4(0, 0, 0, 0);
+            pointLightPtr->lights[i].lightPosition = XMFLOAT3(0, 0, 0);
+            pointLightPtr->lights[i].attenuationFactors = XMFLOAT3(1, 0, 0);
+            pointLightPtr->lights[i].padding1 = 0.0f;
+            pointLightPtr->lights[i].padding2 = 0.0f;
+        }
+        else
+        {
+            pointLightPtr->lights[i].diffuseColor = Input->pointLights[i].GetDiffuseColor();
+            pointLightPtr->lights[i].lightPosition = Input->pointLights[i].GetPosition();
+            pointLightPtr->lights[i].attenuationFactors = Input->pointLights[i].GetAttenuationFactors();
+            pointLightPtr->lights[i].padding1 = 0.0f;
+            pointLightPtr->lights[i].padding2 = 0.0f;
+        }
+    }
+    Input->deviceContext->Unmap(m_pointLightBuffer, 0);
+
     // Set the position of the light constant buffer in the pixel shader.
     bufferNumber = 0;
     // Finally set the light constant buffer in the pixel shader with the updated values.
@@ -436,6 +484,9 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
 
     bufferNumber = 1;
     Input->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
+
+    bufferNumber = 2;
+    Input->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_pointLightBuffer);
 
     return true;
 }

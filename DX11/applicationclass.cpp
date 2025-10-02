@@ -10,6 +10,7 @@ ApplicationClass::ApplicationClass()
 	m_LightShader = 0;
 	m_DirectionalLight = 0;
 	m_CartoonShader = 0;
+	m_PointLights = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -79,13 +80,31 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_DirectionalLight->SetDiffuseColor(1, 1, 1, 1);
 	m_DirectionalLight->SetDirection(-1, -1, 1);
 
+	// HLSL array 크기와 NUM_LIGHTS 차이가 날 경우
+	// Shader class 에서 알아서 제거하도록 구현해둠
+	m_PointLights = new PointLightClass[NUM_LIGHTS];
+	m_PointLights[0].SetDiffuseColor(1, 0, 0, 1);
+	m_PointLights[0].SetPosition(2, 0, -15);
+	m_PointLights[0].SetAttenuationFactors(0, 0, 0.1);
+
+	m_PointLights[1].SetDiffuseColor(0, 0, 1, 1);
+	m_PointLights[1].SetPosition(-2, 0, -15);
+	m_PointLights[1].SetAttenuationFactors(0, 0, 0.1);
+
 	m_CartoonShaderInput = new CartoonShaderInput;
+
 
 	return true;
 }
 
 void ApplicationClass::Shutdown()
 {
+	if (m_PointLights)
+	{
+		delete[] m_PointLights;
+		m_PointLights = 0;
+	}
+
 	if (m_CartoonShaderInput)
 	{
 		delete m_CartoonShaderInput;
@@ -228,9 +247,11 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
 	m_CartoonShaderInput->texture = m_Model->GetTexture();
-	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
 
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
@@ -238,8 +259,8 @@ bool ApplicationClass::Render(float rotation)
 		return false;
 	}
 
-	scaleMatrix = XMMatrixScaling(0.03, 0.03, 0.03);
-	translateMatrix = XMMatrixTranslation(0.5, -1, -13);
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
+	translateMatrix = XMMatrixTranslation(1, -1, -5);
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
 
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
@@ -247,9 +268,11 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
 	m_CartoonShaderInput->texture = m_Model->GetTexture();
-	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
 
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)

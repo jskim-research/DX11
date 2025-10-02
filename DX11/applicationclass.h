@@ -15,6 +15,7 @@
 #include "textureshaderclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
+#include "pointlightclass.h"
 #include "cartoonshaderclass.h"
 
 
@@ -25,6 +26,7 @@ const bool FULL_SCREEN = false;
 const bool VSYNC_ENABLED = true;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.3f;
+const int NUM_LIGHTS = 2;
 
 
 #endif
@@ -52,7 +54,8 @@ private:
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
 	LightShaderClass* m_LightShader;
-	LightClass* m_DirectionalLight;
 	CartoonShaderClass* m_CartoonShader;
 	struct CartoonShaderInput* m_CartoonShaderInput;
+	LightClass* m_DirectionalLight;
+	PointLightClass* m_PointLights;
 };
