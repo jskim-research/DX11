@@ -38,6 +38,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	D3D11_RASTERIZER_DESC rasterDesc;
+	D3D11_RASTERIZER_DESC outlineRasterDesc;
 	float fieldOfView, screenAspect;
 
 
@@ -322,6 +323,23 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	outlineRasterDesc.AntialiasedLineEnable = false;
+	outlineRasterDesc.CullMode = D3D11_CULL_BACK;
+	outlineRasterDesc.DepthBias = 0;
+	outlineRasterDesc.DepthBiasClamp = 0.0f;
+	outlineRasterDesc.DepthClipEnable = true;
+	outlineRasterDesc.FillMode = D3D11_FILL_SOLID;
+	outlineRasterDesc.FrontCounterClockwise = true;
+	outlineRasterDesc.MultisampleEnable = false;
+	outlineRasterDesc.ScissorEnable = false;
+	outlineRasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	result = m_device->CreateRasterizerState(&outlineRasterDesc, &m_outlineRasterState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 	// Now set the rasterizer state.
 	m_deviceContext->RSSetState(m_rasterState);
 
@@ -497,4 +515,16 @@ void D3DClass::ResetViewport()
 	m_deviceContext->RSSetViewports(1, &m_viewport);
 
 	return;
+}
+
+void D3DClass::SetRasterizerFrontCounterClockwise(bool isFrontCounterClockwise)
+{
+	if (isFrontCounterClockwise)
+	{
+		m_deviceContext->RSSetState(m_outlineRasterState);
+	}
+	else
+	{
+		m_deviceContext->RSSetState(m_rasterState);
+	}
 }

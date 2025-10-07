@@ -22,6 +22,7 @@ struct CartoonShaderInput
 	LightClass* directionalLight;
 	PointLightClass* pointLights;
 	int pointLightsNum;
+	bool isOutline;
 };
 
 

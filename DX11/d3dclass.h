@@ -39,6 +39,8 @@ public:
     void SetBackBufferRenderTarget();
     void ResetViewport();
 
+    void SetRasterizerFrontCounterClockwise(bool isFrontCounterClockwise);
+
 private:
     bool m_vsync_enabled;
     int m_videoCardMemory;
@@ -51,6 +53,7 @@ private:
     ID3D11DepthStencilState* m_depthStencilState;
     ID3D11DepthStencilView* m_depthStencilView;
     ID3D11RasterizerState* m_rasterState;
+    ID3D11RasterizerState* m_outlineRasterState;
     XMMATRIX m_projectionMatrix;
     XMMATRIX m_worldMatrix;
     XMMATRIX m_orthoMatrix;

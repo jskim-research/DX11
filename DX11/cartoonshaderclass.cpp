@@ -7,9 +7,12 @@ CartoonShaderClass::CartoonShaderClass()
     m_pixelShader = 0;
     m_layout = 0;
     m_sampleState = 0;
+
     m_matrixBuffer = 0;
     m_lightBuffer = 0;
     m_pointLightBuffer = 0;
+    m_cameraBuffer = 0;
+    m_utilityVariableBuffer = 0;
 }
 
 CartoonShaderClass::CartoonShaderClass(const CartoonShaderClass&)
@@ -86,6 +89,7 @@ bool CartoonShaderClass::InitializeShader(ID3D11Device * device, HWND hwnd, WCHA
     D3D11_BUFFER_DESC lightBufferDesc;
     D3D11_BUFFER_DESC pointLightBufferDesc;
     D3D11_BUFFER_DESC cameraBufferDesc;
+    D3D11_BUFFER_DESC utilityVariableBufferDesc;
 
     // Initialize the pointers this function will use to null.
     errorMessage = 0;
@@ -280,11 +284,30 @@ bool CartoonShaderClass::InitializeShader(ID3D11Device * device, HWND hwnd, WCHA
         return false;
     }
 
+    utilityVariableBufferDesc.ByteWidth = sizeof(UtilityVariableBufferType);
+    utilityVariableBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    utilityVariableBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    utilityVariableBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    utilityVariableBufferDesc.MiscFlags = 0;
+    utilityVariableBufferDesc.StructureByteStride = 0;
+
+    result = device->CreateBuffer(&utilityVariableBufferDesc, 0, &m_utilityVariableBuffer);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
     return true;
 }
 
 void CartoonShaderClass::ShutdownShader()
 {
+    if (m_utilityVariableBuffer)
+    {
+        m_utilityVariableBuffer->Release();
+        m_utilityVariableBuffer = 0;
+    }
+
     if (m_pointLightBuffer)
     {
         m_pointLightBuffer->Release();
@@ -384,6 +407,7 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
     LightBufferType* dataPtr2;
     CameraBufferType* dataPtr3;
     PointLightBuffer* pointLightPtr;
+    UtilityVariableBufferType* utilityVariableBufferPtr;
 
     // Transpose the matrices to prepare them for the shader.
     Input->worldMatrix = XMMatrixTranspose(Input->worldMatrix);
@@ -477,6 +501,18 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
     }
     Input->deviceContext->Unmap(m_pointLightBuffer, 0);
 
+    result = Input->deviceContext->Map(m_utilityVariableBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (FAILED(result))
+    {
+        return false;
+    }
+
+    utilityVariableBufferPtr = (UtilityVariableBufferType*)mappedResource.pData;
+    utilityVariableBufferPtr->isOutline = Input->isOutline;
+    utilityVariableBufferPtr->padding = XMFLOAT3(0, 0, 0);
+
+    Input->deviceContext->Unmap(m_utilityVariableBuffer, 0);
+
     // Set the position of the light constant buffer in the pixel shader.
     bufferNumber = 0;
     // Finally set the light constant buffer in the pixel shader with the updated values.
@@ -487,6 +523,12 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
 
     bufferNumber = 2;
     Input->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_pointLightBuffer);
+
+    bufferNumber = 3;
+    Input->deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_utilityVariableBuffer);
+
+    bufferNumber = 1;
+    Input->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_utilityVariableBuffer);
 
     return true;
 }

@@ -232,8 +232,8 @@ bool ApplicationClass::Render(float rotation)
 	// row major ÀÌ¹Ç·Î ¿ÞÂÊºÎÅÍ °öÇØÁü
 
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	rotateMatrix = XMMatrixRotationY(rotation);
-	// rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+	// rotateMatrix = XMMatrixRotationY(rotation);
+	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
 	// Á¤»ó ¼ø¼­ (SRT)
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
@@ -257,7 +257,67 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->pointLights = m_PointLights;
-	m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
+
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
+	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+	translateMatrix = XMMatrixTranslation(0, -1, -13);
+	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
+
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	// m_CartoonShaderInput->texture = m_Model->GetTexture();
+	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = true;
+
+	m_Direct3D->SetRasterizerFrontCounterClockwise(true);
+
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
+	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+	translateMatrix = XMMatrixTranslation(1, -1, -13);
+	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
+
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	// m_CartoonShaderInput->texture = m_Model->GetTexture();
+	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
@@ -278,7 +338,11 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->pointLights = m_PointLights;
-	m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)

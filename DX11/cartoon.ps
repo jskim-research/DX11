@@ -32,6 +32,12 @@ cbuffer PointLightBuffer : register(b2)
 	PointLightBufferType pointLights[NUM_LIGHTS];
 };
 
+cbuffer UtilityVariableBufferType : register(b3)
+{
+	bool isOutline;
+	float3 util_padding1;
+};
+
 struct PixelInputType
 {
 	float4 position : SV_POSITION;
@@ -152,18 +158,19 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 	float specular;
 	float4 specularColor = float4(1, 1, 1, 1);
 
+	if (input.imageIndex == -1) return float4(1, 0, 0, 0);
+
 	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
 
 	diffuse = 0;
 	specular = 0;
 	
 	// directional light
-	/*
+	
 	diffuse += diffuseColor * CalculateDiffuse(lightDirection, input.normal);
 	// specular += CalculatePhongSpecular(cameraLocation, input, lightDirection, 50);	
 	specular += CalculateBlinnPhongSpecular(cameraLocation, input, lightDirection, 50);
 	diffuse = step(0.1, diffuse);
-	*/
 	
 	// point lights
 	// 여기엔 step(0.1, diffuse) 적용 시 약간 어색한 부분이 있어서
@@ -171,9 +178,11 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 	for (int i=0; i<NUM_LIGHTS; i++)
 	{
 		diffuse += pointLights[i].diffuseColor * CalculatePointLightDiffuse(pointLights[i].position, input.worldPosition, input.normal, pointLights[i].attenuationFactors);
-		specular += CalculatePointLightBlinnPhongSpecular(cameraLocation, input, pointLights[i].position, pointLights[i].attenuationFactors, 50);
+		// pointLights[i].specularColor 추가해야함
+		// specular += CalculatePointLightBlinnPhongSpecular(cameraLocation, input, pointLights[i].position, pointLights[i].attenuationFactors, 50);
 	}
 
 	color = textureColor * (ambient + diffuse) + specularColor * specular;
+
 	return color;
 }

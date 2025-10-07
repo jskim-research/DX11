@@ -49,6 +49,12 @@ private:
 		PointLightBufferType lights[NUM_LIGHTS];
 	};
 
+	struct UtilityVariableBufferType
+	{
+		BOOL isOutline;
+		XMFLOAT3 padding;
+	};
+
 public:
 	CartoonShaderClass();
 	CartoonShaderClass(const CartoonShaderClass&);
@@ -75,6 +81,7 @@ private:
 	ID3D11Buffer* m_lightBuffer;
 	ID3D11Buffer* m_pointLightBuffer;
 	ID3D11Buffer* m_cameraBuffer;
+	ID3D11Buffer* m_utilityVariableBuffer;
 };
 
 
