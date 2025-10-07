@@ -11,6 +11,12 @@ cbuffer UtilityVariableBufferType : register(b1)
 	float3 util_padding1;
 };
 
+cbuffer CameraBuffer : register(b2)
+{
+	float3 cameraLocation;
+	float cameraPadding;
+};
+
 struct VertexInputType
 {
 	float4 position : POSITION;
@@ -43,8 +49,8 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 	output.normal = normalize(output.normal);
 	float3 viewNormal = mul(output.normal, (float3x3)viewMatrix);
 	viewNormal = normalize(viewNormal);
-
-	if (isOutline && viewNormal.z >= 0)
+	
+	if (isOutline)
 	{
 		float k;
 		float M = pow((output.position.x * viewNormal.z - output.position.z * viewNormal.x), 2);
@@ -67,7 +73,7 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 		output.position += k * float4(viewNormal, 0);
 		// 거리 상관 없이 position 조정
 		// output.position += outlineDistance * float4(viewNormal, 0);
-		output.imageIndex = -1;
+		// output.imageIndex = -1;
 	}
 	else
 	{
@@ -76,9 +82,8 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 		output.imageIndex = input.imageIndex;
 	}
 
+	output.imageIndex = input.imageIndex;
 	output.position = mul(output.position, projectionMatrix);
-
-
 
 	return output;
 }

@@ -157,8 +157,12 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 	float4 diffuse;
 	float specular;
 	float4 specularColor = float4(1, 1, 1, 1);
-
-	if (input.imageIndex == -1) return float4(1, 0, 0, 0);
+	
+	if (isOutline && dot(normalize(input.worldPosition - cameraLocation), input.normal) >= 0)
+		return float4(1, 0, 0, 0);
+	else if (isOutline)
+		discard;
+	
 
 	textureColor = gltfTextures.Sample(SampleType, float3(input.tex, input.imageIndex));
 
@@ -183,6 +187,7 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 	}
 
 	color = textureColor * (ambient + diffuse) + specularColor * specular;
+	color = textureColor;
 
 	return color;
 }

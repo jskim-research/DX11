@@ -530,6 +530,9 @@ bool CartoonShaderClass::SetShaderParameters(CartoonShaderInput* Input)
     bufferNumber = 1;
     Input->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_utilityVariableBuffer);
 
+    bufferNumber = 2;
+    Input->deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
+
     return true;
 }
 

@@ -215,6 +215,7 @@ bool ApplicationClass::Render(float rotation)
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	XMMATRIX scaleMatrix, rotateMatrix, translateMatrix;
 	bool result;
+	bool rotateMesh = false;
 
 	// Clear the buffers to begin the scene.
 	m_Direct3D->BeginScene(0.5f, 0.5f, 0.0f, 1.0f);  // yellow
@@ -225,15 +226,48 @@ bool ApplicationClass::Render(float rotation)
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
-	// worldMatrix = XMMatrixMultiply(XMMatrixRotationY(rotation), XMMatrixRotationX(rotation / 2));
-	
 	float scale = 0.07;
+
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
+	if (rotateMesh)
+		rotateMatrix = XMMatrixRotationY(rotation);
+	else
+		rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+	translateMatrix = XMMatrixTranslation(0, -1, -13);
+	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
+
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	// m_CartoonShaderInput->texture = m_Model->GetTexture();
+	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = true;
+
+	m_Direct3D->SetRasterizerFrontCounterClockwise(true);
+
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
 	// 행렬이 곱해지는 순서가 SRT 가 되도록 한다.
 	// row major 이므로 왼쪽부터 곱해짐
 
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	// rotateMatrix = XMMatrixRotationY(rotation);
-	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+
+	if (rotateMesh)
+		rotateMatrix = XMMatrixRotationY(rotation);
+	else
+		rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
 	// 정상 순서 (SRT)
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
@@ -263,34 +297,7 @@ bool ApplicationClass::Render(float rotation)
 
 	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
-	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
-	if (!result)
-	{
-		return false;
-	}
-
-	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
-	translateMatrix = XMMatrixTranslation(0, -1, -13);
-	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
-
-	m_Model->Render(m_Direct3D->GetDeviceContext());
-
-	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
-	m_CartoonShaderInput->worldMatrix = worldMatrix;
-	m_CartoonShaderInput->viewMatrix = viewMatrix;
-	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	// m_CartoonShaderInput->texture = m_Model->GetTexture();
-	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
-	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
-	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
-	m_CartoonShaderInput->pointLights = m_PointLights;
-	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
-	m_CartoonShaderInput->pointLightsNum = 0;
-	m_CartoonShaderInput->isOutline = true;
-
-	m_Direct3D->SetRasterizerFrontCounterClockwise(true);
-
+	
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 	{
