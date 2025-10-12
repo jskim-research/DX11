@@ -46,6 +46,7 @@ public:
 	void MoveCameraForward(float delta);
 	void MoveCameraRight(float delta);
 	void MoveCameraUp(float delta);
+	void AddCameraRotation(float x, float y, float z);
 
 private:
 	bool Render(float);

@@ -227,6 +227,11 @@ void ApplicationClass::MoveCameraUp(float delta)
 	m_Camera->SetPosition(position.x + rightVector.x * delta, position.y + rightVector.y * delta, position.z + rightVector.z * delta);
 }
 
+void ApplicationClass::AddCameraRotation(float x, float y, float z)
+{
+	m_Camera->AddRotation(x, y, z);
+}
+
 bool ApplicationClass::Render(float rotation)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;

@@ -44,6 +44,14 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_RASTERIZER_DESC outlineRasterDesc;
 	float fieldOfView, screenAspect;
 
+	// 마우스를 현재 윈도우 클라이언트 영역 안으로 제한
+	RECT rect;
+	GetClientRect(hwnd, &rect);                   // 클라이언트 좌표 가져오기
+	MapWindowPoints(hwnd, nullptr, (POINT*)&rect, 2); // 화면 좌표로 변환
+	ClipCursor(&rect);                             // 마우스 제한
+
+	ShowCursor(TRUE);
+
 	m_screenWidth = screenWidth;
 	m_screenHeight = screenHeight;
 

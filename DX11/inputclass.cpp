@@ -1,8 +1,14 @@
 #include "inputclass.h"
+#include <math.h>
 
 InputClass::InputClass():
 	m_isWheelDown(false),
-	m_isWheelUp(false)
+	m_isWheelUp(false),
+	m_isLButtonDown(false),
+	m_prevMouseX(0),
+	m_prevMouseY(0),
+	m_curMouseX(0),
+	m_curMouseY(0)
 {
 
 }
@@ -49,6 +55,31 @@ void InputClass::Wheel(short delta)
 	else if (delta < 0) m_isWheelDown = true;
 }
 
+void InputClass::LButtonDown(int mouseX, int mouseY)
+{
+	m_isLButtonDown = true;
+	m_prevMouseX = m_curMouseX = mouseX;
+	m_prevMouseY = m_curMouseY = mouseY;
+}
+
+void InputClass::LButtonUp(int mouseX, int mouseY)
+{
+	m_isLButtonDown = false;
+	m_prevMouseX = m_curMouseX = mouseX;
+	m_prevMouseY = m_curMouseY = mouseY;
+}
+
+void InputClass::MouseMove(int mouseX, int mouseY)
+{
+	if (m_isLButtonDown)
+	{
+		m_prevMouseX = m_curMouseX;
+		m_prevMouseY = m_curMouseY;
+		m_curMouseX = mouseX;
+		m_curMouseY = mouseY;
+	}
+}
+
 bool InputClass::IsKeyDown(unsigned int key)
 {	
 	// Return what state the key is in (pressed/not pressed).
@@ -70,4 +101,23 @@ void InputClass::ResetWheel()
 {
 	m_isWheelUp = false;
 	m_isWheelDown = false;
+}
+
+bool InputClass::IsLeftButtonDown() const
+{
+	return m_isLButtonDown;
+}
+
+int InputClass::GetMouseDeltaX() const
+{
+	if (abs(m_curMouseX - m_prevMouseX) > 2)
+		return m_curMouseX - m_prevMouseX;
+	return 0;
+}
+
+int InputClass::GetMouseDeltaY() const
+{
+	if (abs(m_curMouseY - m_prevMouseY) > 2)
+		return m_curMouseY - m_prevMouseY;
+	return 0;
 }

@@ -1,4 +1,5 @@
 #include "systemclass.h"
+#include <windowsx.h>
 
 SystemClass::SystemClass()
 {
@@ -135,6 +136,30 @@ LRESULT SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM 
 		return 0;
 	}
 
+	case WM_LBUTTONDOWN:
+	{
+		int x = GET_X_LPARAM(lparam);
+		int y = GET_Y_LPARAM(lparam);
+		m_Input->LButtonDown(x, y);
+		return 0;
+	}
+
+	case WM_LBUTTONUP:
+	{
+		int x = GET_X_LPARAM(lparam);
+		int y = GET_Y_LPARAM(lparam);
+		m_Input->LButtonUp(x, y);
+		return 0;
+	}
+
+	case WM_MOUSEMOVE:
+	{
+		int x = GET_X_LPARAM(lparam);
+		int y = GET_Y_LPARAM(lparam);
+		m_Input->MouseMove(x, y);
+		return 0;
+	}
+
 	// Any other messages send to the default message handler as our application won't make use of them.
 	default:
 	{
@@ -152,6 +177,17 @@ bool SystemClass::Frame()
 	if (m_Input->IsKeyDown(VK_ESCAPE))
 	{
 		return false;
+	}
+
+	if (m_Input->IsLeftButtonDown())
+	{
+		float sensitivity = 0.1;
+		float deltaX = sensitivity * m_Input->GetMouseDeltaX();
+		float deltaY = sensitivity * m_Input->GetMouseDeltaY();
+
+
+		// view 이후의 좌표계로 생각해서 x, y, z 값 넣어줘야함
+		m_Application->AddCameraRotation(deltaY, deltaX, 0);
 	}
 
 	if (m_Input->IsKeyDown('W'))

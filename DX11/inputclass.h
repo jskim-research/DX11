@@ -18,17 +18,28 @@ public:
 	void KeyDown(unsigned int);
 	void KeyUp(unsigned int);
 	void Wheel(short delta);
+	void LButtonDown(int mouseX, int mouseY);
+	void LButtonUp(int mouseX, int mouseY);
+	void MouseMove(int mouseX, int mouseY);
 
 
 	bool IsKeyDown(unsigned int);
 	bool IsWheelUp() const;
 	bool IsWheelDown() const;
 	void ResetWheel();
+	bool IsLeftButtonDown() const;
+	int GetMouseDeltaX() const;
+	int GetMouseDeltaY() const;
 
 private:
 	bool m_keys[256];
 	bool m_isWheelUp;
 	bool m_isWheelDown;
+	bool m_isLButtonDown;
+	int m_prevMouseX;
+	int m_prevMouseY;
+	int m_curMouseX;
+	int m_curMouseY;
 };
 
 #endif
