@@ -17,6 +17,7 @@
 #include "lightclass.h"
 #include "pointlightclass.h"
 #include "cartoonshaderclass.h"
+#include "bitmapclass.h"
 
 
 /////////////
@@ -58,4 +59,5 @@ private:
 	struct CartoonShaderInput* m_CartoonShaderInput;
 	LightClass* m_DirectionalLight;
 	PointLightClass* m_PointLights;
+	BitmapClass* m_Bitmap;
 };

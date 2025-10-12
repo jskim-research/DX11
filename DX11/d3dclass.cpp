@@ -10,6 +10,9 @@ D3DClass::D3DClass()
 	m_depthStencilState = 0;
 	m_depthStencilView = 0;
 	m_rasterState = 0;
+	m_screenWidth = 0;
+	m_screenHeight = 0;
+	m_depthStencilStateNotUsingZBuffer = 0;
 }
 
 D3DClass::D3DClass(const D3DClass& other)
@@ -41,6 +44,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_RASTERIZER_DESC outlineRasterDesc;
 	float fieldOfView, screenAspect;
 
+	m_screenWidth = screenWidth;
+	m_screenHeight = screenHeight;
 
 	// Store the vsync setting.
 	m_vsync_enabled = vsync;
@@ -280,6 +285,13 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	depthStencilDesc.DepthEnable = false;
+	result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilStateNotUsingZBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 	// Set the depth stencil state.
 	// 실제 사용 결정 시점
 	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
@@ -371,6 +383,11 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 void D3DClass::Shutdown()
 {
+	if (m_depthStencilStateNotUsingZBuffer)
+	{
+		m_depthStencilStateNotUsingZBuffer->Release();
+		m_depthStencilStateNotUsingZBuffer = 0;
+	}
 	// Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
 	if (m_swapChain)
 	{
@@ -526,5 +543,17 @@ void D3DClass::SetRasterizerFrontCounterClockwise(bool isFrontCounterClockwise)
 	else
 	{
 		m_deviceContext->RSSetState(m_rasterState);
+	}
+}
+
+void D3DClass::SetZBufferOnOff(bool isZBufferOn)
+{
+	if (isZBufferOn)
+	{
+		m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+	}
+	else
+	{
+		m_deviceContext->OMSetDepthStencilState(m_depthStencilStateNotUsingZBuffer, 1);
 	}
 }

@@ -40,8 +40,14 @@ public:
     void ResetViewport();
 
     void SetRasterizerFrontCounterClockwise(bool isFrontCounterClockwise);
+    void SetZBufferOnOff(bool isZBufferOn);
+
+    inline int GetScreenWidth() const { return m_screenWidth; }
+    inline int GetScreenHeight() const { return m_screenHeight; }
 
 private:
+    int m_screenWidth;
+    int m_screenHeight;
     bool m_vsync_enabled;
     int m_videoCardMemory;
     char m_videoCardDescription[128];
@@ -58,6 +64,7 @@ private:
     XMMATRIX m_worldMatrix;
     XMMATRIX m_orthoMatrix;
     D3D11_VIEWPORT m_viewport;
+    ID3D11DepthStencilState* m_depthStencilStateNotUsingZBuffer;
 };
 
 

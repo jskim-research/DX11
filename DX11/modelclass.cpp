@@ -1,6 +1,13 @@
 #include "modelclass.h"
+#include "d3dclass.h"
 
-ModelClass::ModelClass()
+
+ModelClass::ModelClass():
+	m_vertexBufferUsage(D3D11_USAGE_DEFAULT),
+	m_vertexBufferCPUAccessFlags(0),
+	m_indexBufferUsage(D3D11_USAGE_DEFAULT),
+	m_indexBufferCPUAccessFlags(0)
+	
 {
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
@@ -11,6 +18,10 @@ ModelClass::ModelClass()
 }
 
 ModelClass::~ModelClass()
+{
+}
+
+void ModelClass::Initialize(D3DClass* direct3D)
 {
 }
 
@@ -118,10 +129,10 @@ bool ModelClass::ImportFromGLTF(ID3D11Device* device, ID3D11DeviceContext* devic
 	deviceContext->GenerateMips(m_textureArrayView);
 
 	// Set up the description of the static vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.Usage = m_vertexBufferUsage;
 	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::CommonVertexType) * m_vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.CPUAccessFlags = m_vertexBufferCPUAccessFlags;
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
@@ -138,10 +149,10 @@ bool ModelClass::ImportFromGLTF(ID3D11Device* device, ID3D11DeviceContext* devic
 	}
 
 	// Set up the description of the static index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.Usage = m_indexBufferUsage;
 	indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.CPUAccessFlags = m_indexBufferCPUAccessFlags;
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 
@@ -221,106 +232,6 @@ bool ModelClass::ImportFromCustomFile(ID3D11Device* device, ID3D11DeviceContext*
 	return true;
 }
 
-bool ModelClass::InitializeBuffers(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
-{
-	ObjectParser::CommonVertexType* gltf_vertices = 0;
-	unsigned long* indices;
-	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-	HRESULT result;
-	m_objectParser = new ObjectParser;
-
-	std::vector<tinygltf::Image> images;
-	const char* fileName = "./data/burnice.glb";
-	bool parseResult = m_objectParser->ParseGLTFFile(fileName, &gltf_vertices, &indices, &m_vertexCount, &m_indexCount, images);
-
-	if (!parseResult)
-	{
-		return false;
-	}
-
-	if (images.size() <= 0)
-	{
-		return false;
-	}
-
-	D3D11_TEXTURE2D_DESC textureDesc;
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-
-	// 모든 images 가 같은 resolution 이라고 가정
-	textureDesc.Width = images[0].width;
-	textureDesc.Height = images[0].height;
-	textureDesc.MipLevels = 1;
-	textureDesc.ArraySize = images.size();
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;  // unsigned char *
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-	result = device->CreateTexture2D(&textureDesc, 0, &m_textureArray);
-	if (FAILED(result))
-	{
-		return false;
-	}
-
-	for (int i = 0; i < images.size(); i++)
-	{
-		tinygltf::Image& image = images[i];
-		unsigned int rowPitch;
-		rowPitch = (image.width * 4) * sizeof(unsigned char);
-
-		deviceContext->UpdateSubresource(
-			m_textureArray,
-			D3D11CalcSubresource(0, i, textureDesc.MipLevels),  // Mip 0, Array Slice i, 해당 함수 mip level 수동 지정 필요
-			NULL, 
-			image.image.data(), 
-			rowPitch, 
-			0);	
-	}
-
-	srvDesc.Format = textureDesc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-	srvDesc.Texture2DArray.MostDetailedMip = 0;
-	srvDesc.Texture2DArray.MipLevels = -1;
-	srvDesc.Texture2DArray.FirstArraySlice = 0;
-	srvDesc.Texture2DArray.ArraySize = images.size();
-
-	// Create the shader resource view for the texture.
-	result = device->CreateShaderResourceView(m_textureArray, &srvDesc, &m_textureArrayView);
-	if (FAILED(result))
-	{
-
-		return false;
-	}
-
-	// Generate mipmaps for this texture.
-	deviceContext->GenerateMips(m_textureArrayView);
-
-	if (!MakeVertexBuffer(device, gltf_vertices))
-	{
-		return false;
-	}
-
-	if (!MakeIndexBuffer(device, indices))
-	{
-		return false;
-	}
-
-	if (gltf_vertices)
-	{
-		delete[] gltf_vertices;
-		gltf_vertices = 0;
-	}
-
-	delete[] indices;
-	indices = 0;
-
-	return true;
-}
-
 void ModelClass::ShutdownBuffers()
 {
 	if (m_vertexBuffer)
@@ -338,8 +249,7 @@ void ModelClass::ShutdownBuffers()
 
 void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 {
-	// vertex buffer, index buffer 를 GPU 에 active 하도록 하는 작업
-	// 렌더 대상 데이터 세팅만 하는거임
+	// vertex buffer, index buffer 를 GPU 의 rendering pipeline stage 랑 연결하는 작업
 
 	unsigned int stride;
 	unsigned int offset;
@@ -400,10 +310,10 @@ bool ModelClass::MakeVertexBuffer(ID3D11Device* device, ObjectParser::CommonVert
 	D3D11_SUBRESOURCE_DATA vertexData;
 
 	// Set up the description of the static vertex buffer.
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.Usage = m_vertexBufferUsage;
 	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::CommonVertexType) * m_vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.CPUAccessFlags = m_vertexBufferCPUAccessFlags;
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
@@ -429,10 +339,10 @@ bool ModelClass::MakeIndexBuffer(ID3D11Device* device, unsigned long* indices)
 	D3D11_SUBRESOURCE_DATA indexData;
 
 	// Set up the description of the static index buffer.
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.Usage = m_indexBufferUsage;
 	indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.CPUAccessFlags = m_indexBufferCPUAccessFlags;
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 

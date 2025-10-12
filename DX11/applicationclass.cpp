@@ -11,6 +11,7 @@ ApplicationClass::ApplicationClass()
 	m_DirectionalLight = 0;
 	m_CartoonShader = 0;
 	m_PointLights = 0;
+	m_Bitmap = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -82,6 +83,16 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_Bitmap = new BitmapClass;
+	strcpy_s(objFileName1, "./data/Bitmap.txt");
+	strcpy_s(textureFilename, "./data/stone01.tga");
+	result = m_Bitmap->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName1, textureFilename);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not import the bitmap object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_DirectionalLight = new LightClass;
 	m_DirectionalLight->SetDiffuseColor(1, 1, 1, 1);
 	m_DirectionalLight->SetDirection(-1, -1, 1);
@@ -105,6 +116,12 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+	if (m_Bitmap)
+	{
+		delete m_Bitmap;
+		m_Bitmap = 0;
+	}
+
 	if (m_PointLights)
 	{
 		delete[] m_PointLights;
@@ -357,6 +374,39 @@ bool ApplicationClass::Render(float rotation)
 		return false;
 	}
 
+	// Bitmap ·»´õ¸µ
+	// 1280 x 720
+	m_Bitmap->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 150, 360 - 150);
+	m_Bitmap->Render(m_Direct3D->GetDeviceContext());
+
+
+	worldMatrix = XMMatrixIdentity();
+	viewMatrix = XMMatrixIdentity();
+	m_Direct3D->GetOrthoMatrix(projectionMatrix);
+
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	m_CartoonShaderInput->gltfTextureArrayView = m_Bitmap->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
+	m_Direct3D->SetZBufferOnOff(false);
+
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Bitmap->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
+	m_Direct3D->SetZBufferOnOff(true);
+
+	
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();
 	return true;

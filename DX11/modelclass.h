@@ -27,7 +27,9 @@ private:
 
 public:
 	ModelClass();
-	~ModelClass();
+	virtual ~ModelClass();
+
+	virtual void Initialize(class D3DClass* direct3D);
 
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
@@ -40,7 +42,6 @@ public:
 	bool ImportFromCustomFile(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* fileName, const char* textureFileName);
 
 private:
-	bool InitializeBuffers(ID3D11Device*, ID3D11DeviceContext*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
@@ -50,8 +51,14 @@ private:
 	bool MakeVertexBuffer(ID3D11Device* device, ObjectParser::CommonVertexType* vertices);
 	bool MakeIndexBuffer(ID3D11Device* device, unsigned long* indices);
 
-private:
+protected:
+	D3D11_USAGE m_vertexBufferUsage;
+	UINT m_vertexBufferCPUAccessFlags;
+	D3D11_USAGE m_indexBufferUsage;
+	UINT m_indexBufferCPUAccessFlags;
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
+
+private:
 	int m_vertexCount, m_indexCount;
 	TextureClass* m_Texture;
 	ObjectParser* m_objectParser;
@@ -59,6 +66,7 @@ private:
 	ID3D11ShaderResourceView* m_textureArrayView;
 	// Input layout desc 를 import 한 vertex buffer, index buffer 에 맞게 할당
 	D3D11_INPUT_ELEMENT_DESC* m_polygonLayout;
+
 };
 
 #endif
