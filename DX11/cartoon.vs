@@ -21,8 +21,8 @@ struct VertexInputType
 {
 	float4 position : POSITION;
 	float3 normal : NORMAL;
-	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
+	float4 color : COLOR;
 	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
@@ -30,9 +30,10 @@ struct PixelInputType
 {
 	float4 position : SV_POSITION;
 	float3 worldPosition : POSITION;
-	float3 normal : NORMAL;
+	float3 normal : NORMAL0;
 	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
+	float3 screenNormal : NORMAL1;
 	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
@@ -48,10 +49,10 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 	output.normal = mul(input.normal, (float3x3)worldMatrix);
 	output.normal = normalize(output.normal);
 	float3 viewNormal = mul(output.normal, (float3x3)viewMatrix);
-	viewNormal = normalize(viewNormal);
 	
 	if (isOutline)
 	{
+		viewNormal = normalize(viewNormal);
 		float k;
 		float M = pow((output.position.x * viewNormal.z - output.position.z * viewNormal.x), 2);
 		// screen width = 1280
@@ -84,6 +85,7 @@ PixelInputType CartoonVertexShader(VertexInputType input)
 
 	output.imageIndex = input.imageIndex;
 	output.position = mul(output.position, projectionMatrix);
+	output.screenNormal = mul(viewNormal, projectionMatrix);
 
 	return output;
 }

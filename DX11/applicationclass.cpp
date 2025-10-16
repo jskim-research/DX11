@@ -1,5 +1,6 @@
 #include "applicationclass.h"
 #include "cartoonshaderinput.h"
+#include "baseshaderinput.h"
 #include <fstream>
 
 ApplicationClass::ApplicationClass()
@@ -12,6 +13,8 @@ ApplicationClass::ApplicationClass()
 	m_CartoonShader = 0;
 	m_PointLights = 0;
 	m_Bitmap = 0;
+	m_BaseShader = 0;
+	m_BaseShaderInput = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -83,6 +86,14 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_BaseShader = new BaseShaderClass(L"base.vs", L"base.ps");
+	result = m_BaseShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the base shader object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_Bitmap = new BitmapClass;
 	strcpy_s(objFileName1, "./data/Bitmap.txt");
 	strcpy_s(textureFilename, "./data/stone01.tga");
@@ -109,6 +120,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_PointLights[1].SetAttenuationFactors(0, 0, 0.1);
 
 	m_CartoonShaderInput = new CartoonShaderInput;
+	m_BaseShaderInput = new BaseShaderInput;
 
 
 	return true;
@@ -116,6 +128,18 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+	if (m_BaseShaderInput)
+	{
+		delete m_BaseShaderInput;
+		m_BaseShaderInput = 0;
+	}
+	if (m_BaseShader)
+	{
+		m_BaseShader->Shutdown();
+		delete m_BaseShader;
+		m_BaseShader = 0;
+	}
+
 	if (m_Bitmap)
 	{
 		delete m_Bitmap;
@@ -237,89 +261,63 @@ bool ApplicationClass::Render(float rotation)
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	XMMATRIX scaleMatrix, rotateMatrix, translateMatrix;
 	bool result;
-	bool rotateMesh = false;
 
-	// Clear the buffers to begin the scene.
-	m_Direct3D->BeginScene(0.5f, 0.5f, 0.0f, 1.0f);  // yellow
+	// Clear the render target view & depth stencil view to begin the scene.
+	m_Direct3D->BeginScene(0.5f, 0.5f, 0.0f, 1.0f);  // yellow background
 
-	m_Camera->Render();  // view matrix 계산
-
+	/*
+	*	World, View, Projection Matrix 계산
+	*/
+	m_Camera->Render();
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
 	float scale = 0.07;
-
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	if (rotateMesh)
-		rotateMatrix = XMMatrixRotationY(rotation);
-	else
-		rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
+	// 행렬이 곱해지는 순서가 SRT 가 되도록 한다.
+	// row major 이므로 왼쪽부터 곱해짐
+	// 정상 순서 (SRT)
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
-
-	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	// m_CartoonShaderInput->texture = m_Model->GetTexture();
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->pointLights = m_PointLights;
-	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
 	m_CartoonShaderInput->pointLightsNum = 0;
 	m_CartoonShaderInput->isOutline = true;
-
 	m_Direct3D->SetRasterizerFrontCounterClockwise(true);
 
+	m_Model->Render(m_Direct3D->GetDeviceContext());
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 	{
 		return false;
 	}
 
-	// 행렬이 곱해지는 순서가 SRT 가 되도록 한다.
-	// row major 이므로 왼쪽부터 곱해짐
-
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-
-	if (rotateMesh)
-		rotateMatrix = XMMatrixRotationY(rotation);
-	else
-		rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
-	// 정상 순서 (SRT)
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
-
-	// 잘못된 순서 (TSR)
-	// 크기 변화 시 이동량이 변화함
-	// 축에서 벗어난 곳에서 회전되기 때문에 특정 좌표를 기준으로 한 바퀴를 도는 모습을 보임
-	// worldMatrix = XMMatrixMultiply(translateMatrix, XMMatrixMultiply(scaleMatrix, rotateMatrix));
-
-	// Scale 테스트
-	// worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.13, 0.07, 0.07), XMMatrixMultiply(rotateMatrix, translateMatrix));
-
-	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	// m_CartoonShaderInput->texture = m_Model->GetTexture();
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->pointLights = m_PointLights;
-	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
 	m_CartoonShaderInput->pointLightsNum = 0;
 	m_CartoonShaderInput->isOutline = false;
-
 	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
-	
+	m_Model->Render(m_Direct3D->GetDeviceContext());
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 	{
@@ -331,28 +329,28 @@ bool ApplicationClass::Render(float rotation)
 	translateMatrix = XMMatrixTranslation(1, -1, -13);
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
 
-	m_Model->Render(m_Direct3D->GetDeviceContext());
-
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	// m_CartoonShaderInput->texture = m_Model->GetTexture();
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->pointLights = m_PointLights;
-	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
 	m_CartoonShaderInput->pointLightsNum = 0;
 	m_CartoonShaderInput->isOutline = false;
-
 	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
+	m_Model->Render(m_Direct3D->GetDeviceContext());
 	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 	{
 		return false;
 	}
+
+	/*
+	*	BaseShader 렌더링 테스트
+	*/
 
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
 	translateMatrix = XMMatrixTranslation(1, -1, -5);
@@ -362,22 +360,18 @@ bool ApplicationClass::Render(float rotation)
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
 	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	// m_CartoonShaderInput->texture = m_Model->GetTexture();
 	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
 	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
 	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
 	m_CartoonShaderInput->pointLights = m_PointLights;
-	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
 	m_CartoonShaderInput->pointLightsNum = 0;
 	m_CartoonShaderInput->isOutline = false;
-
 	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
-	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
+	m_Model->Render(m_Direct3D->GetDeviceContext());
+	result = m_BaseShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
-	{
 		return false;
-	}
 
 	// Bitmap 렌더링
 	// 1280 x 720

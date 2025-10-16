@@ -45,6 +45,7 @@ struct PixelInputType
 	float3 normal : NORMAL;
 	float4 color : COLOR;
 	float2 tex : TEXCOORD0;
+	float3 screenNormal : NORMAL1;
 	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
@@ -186,8 +187,7 @@ float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
 		// specular += CalculatePointLightBlinnPhongSpecular(cameraLocation, input, pointLights[i].position, pointLights[i].attenuationFactors, 50);
 	}
 
-	color = textureColor * (ambient + diffuse) + specularColor * specular;
-	color = textureColor;
-
+	color = textureColor * (ambient + diffuse); // + specularColor * specular;
+	
 	return color;
 }

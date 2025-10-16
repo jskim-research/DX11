@@ -11,12 +11,16 @@ using namespace DirectX;
 class ObjectParser
 {
 public:
-	struct CommonVertexType
+	struct BaseVertexType
 	{
 		XMFLOAT3 position;
 		XMFLOAT3 normal;
-		XMFLOAT4 color;
 		XMFLOAT2 texture;  // (u, v, texture idx)
+	};
+
+	struct CommonVertexType : public BaseVertexType
+	{
+		XMFLOAT4 color;
 		uint32_t imageIndex;
 	};
 
