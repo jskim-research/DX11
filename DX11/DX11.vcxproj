@@ -70,6 +70,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\DX11\DX11\include;C:\DX11\DX11;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -127,44 +130,56 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="applicationclass.h" />
-    <ClInclude Include="baseshaderclass.h" />
-    <ClInclude Include="baseshaderinput.h" />
-    <ClInclude Include="bitmapclass.h" />
-    <ClInclude Include="cameraclass.h" />
-    <ClInclude Include="cartoonshaderclass.h" />
-    <ClInclude Include="cartoonshaderinput.h" />
-    <ClInclude Include="colorshaderclass.h" />
-    <ClInclude Include="d3dclass.h" />
-    <ClInclude Include="inputclass.h" />
-    <ClInclude Include="lightclass.h" />
-    <ClInclude Include="lightshaderclass.h" />
+    <ClInclude Include="include\camera\cameraclass.h" />
+    <ClInclude Include="include\framework\applicationclass.h" />
+    <ClInclude Include="include\framework\d3dclass.h" />
+    <ClInclude Include="include\framework\inputclass.h" />
+    <ClInclude Include="include\framework\systemclass.h" />
+    <ClInclude Include="include\light\lightclass.h" />
+    <ClInclude Include="include\light\pointlightclass.h" />
+    <ClInclude Include="include\model\bitmapclass.h" />
+    <ClInclude Include="include\model\modelclass.h" />
+    <ClInclude Include="include\shader\baseshaderclass.h" />
+    <ClInclude Include="include\shader\baseshaderinput.h" />
+    <ClInclude Include="include\shader\cartoonshaderclass.h" />
+    <ClInclude Include="include\shader\cartoonshaderinput.h" />
+    <ClInclude Include="include\shader\colorshaderclass.h" />
+    <ClInclude Include="include\shader\lightshaderclass.h" />
+    <ClInclude Include="include\shader\textureshaderclass.h" />
+    <ClInclude Include="include\texture\textureclass.h" />
+    <ClInclude Include="include\utility\json.hpp" />
+    <ClInclude Include="include\utility\objectparser.h" />
+    <ClInclude Include="include\utility\stb_image.h" />
+    <ClInclude Include="include\utility\stb_image_write.h" />
+    <ClInclude Include="include\utility\tiny_gltf.h" />
     <ClInclude Include="main.h" />
-    <ClInclude Include="modelclass.h" />
-    <ClInclude Include="objectparser.h" />
-    <ClInclude Include="pointlightclass.h" />
-    <ClInclude Include="systemclass.h" />
-    <ClInclude Include="textureclass.h" />
-    <ClInclude Include="textureshaderclass.h" />
+    <ClInclude Include="source\model\bitmapclass.h" />
+    <ClInclude Include="source\model\modelclass.h" />
+    <ClInclude Include="source\shader\baseshaderclass.h" />
+    <ClInclude Include="source\shader\baseshaderinput.h" />
+    <ClInclude Include="source\shader\cartoonshaderclass.h" />
+    <ClInclude Include="source\shader\cartoonshaderinput.h" />
+    <ClInclude Include="source\shader\colorshaderclass.h" />
+    <ClInclude Include="source\shader\lightshaderclass.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="applicationclass.cpp" />
-    <ClCompile Include="baseshaderclass.cpp" />
-    <ClCompile Include="bitmapclass.cpp" />
-    <ClCompile Include="cameraclass.cpp" />
-    <ClCompile Include="cartoonshaderclass.cpp" />
-    <ClCompile Include="colorshaderclass.cpp" />
-    <ClCompile Include="d3dclass.cpp" />
-    <ClCompile Include="inputclass.cpp" />
-    <ClCompile Include="lightclass.cpp" />
-    <ClCompile Include="lightshader.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="modelclass.cpp" />
-    <ClCompile Include="objectparser.cpp" />
-    <ClCompile Include="pointlightclass.cpp" />
-    <ClCompile Include="systemclass.cpp" />
-    <ClCompile Include="textureclass.cpp" />
-    <ClCompile Include="textureshaderclass.cpp" />
+    <ClCompile Include="source\camera\cameraclass.cpp" />
+    <ClCompile Include="source\framework\applicationclass.cpp" />
+    <ClCompile Include="source\framework\d3dclass.cpp" />
+    <ClCompile Include="source\framework\inputclass.cpp" />
+    <ClCompile Include="source\framework\systemclass.cpp" />
+    <ClCompile Include="source\light\lightclass.cpp" />
+    <ClCompile Include="source\light\pointlightclass.cpp" />
+    <ClCompile Include="source\model\bitmapclass.cpp" />
+    <ClCompile Include="source\model\modelclass.cpp" />
+    <ClCompile Include="source\shader\baseshaderclass.cpp" />
+    <ClCompile Include="source\shader\cartoonshaderclass.cpp" />
+    <ClCompile Include="source\shader\colorshaderclass.cpp" />
+    <ClCompile Include="source\shader\lightshader.cpp" />
+    <ClCompile Include="source\shader\textureshaderclass.cpp" />
+    <ClCompile Include="source\texture\textureclass.cpp" />
+    <ClCompile Include="source\utility\objectparser.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

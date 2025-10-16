@@ -8,7 +8,7 @@
 */
 
 #include "main.h"
-#include "systemclass.h"
+#include "framework/systemclass.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,

@@ -18,58 +18,94 @@
     <ClInclude Include="main.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="systemclass.h">
+    <ClInclude Include="source\shader\baseshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="inputclass.h">
+    <ClInclude Include="source\shader\cartoonshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="applicationclass.h">
+    <ClInclude Include="source\shader\colorshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="d3dclass.h">
+    <ClInclude Include="source\shader\lightshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="colorshaderclass.h">
+    <ClInclude Include="source\shader\baseshaderinput.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="modelclass.h">
+    <ClInclude Include="source\shader\cartoonshaderinput.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="cameraclass.h">
+    <ClInclude Include="source\model\bitmapclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="textureshaderclass.h">
+    <ClInclude Include="source\model\modelclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="textureclass.h">
+    <ClInclude Include="include\framework\applicationclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="lightshaderclass.h">
+    <ClInclude Include="include\shader\baseshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="lightclass.h">
+    <ClInclude Include="include\shader\baseshaderinput.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="objectparser.h">
+    <ClInclude Include="include\shader\cartoonshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="cartoonshaderclass.h">
+    <ClInclude Include="include\shader\cartoonshaderinput.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="cartoonshaderinput.h">
+    <ClInclude Include="include\shader\colorshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="pointlightclass.h">
+    <ClInclude Include="include\shader\lightshaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="bitmapclass.h">
+    <ClInclude Include="include\model\bitmapclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="baseshaderclass.h">
+    <ClInclude Include="include\model\modelclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="baseshaderinput.h">
+    <ClInclude Include="include\shader\textureshaderclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\light\lightclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\light\pointlightclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utility\tiny_gltf.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utility\stb_image_write.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utility\stb_image.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utility\objectparser.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utility\json.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\framework\d3dclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\framework\inputclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\framework\systemclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\camera\cameraclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\texture\textureclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -77,52 +113,52 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="systemclass.cpp">
+    <ClCompile Include="source\framework\applicationclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="inputclass.cpp">
+    <ClCompile Include="source\shader\baseshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="applicationclass.cpp">
+    <ClCompile Include="source\shader\cartoonshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="d3dclass.cpp">
+    <ClCompile Include="source\shader\colorshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="colorshaderclass.cpp">
+    <ClCompile Include="source\shader\lightshader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="modelclass.cpp">
+    <ClCompile Include="source\model\bitmapclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="cameraclass.cpp">
+    <ClCompile Include="source\model\modelclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="textureshaderclass.cpp">
+    <ClCompile Include="source\shader\textureshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="textureclass.cpp">
+    <ClCompile Include="source\light\pointlightclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="lightshader.cpp">
+    <ClCompile Include="source\light\lightclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="lightclass.cpp">
+    <ClCompile Include="source\utility\objectparser.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="objectparser.cpp">
+    <ClCompile Include="source\framework\d3dclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="cartoonshaderclass.cpp">
+    <ClCompile Include="source\framework\inputclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="pointlightclass.cpp">
+    <ClCompile Include="source\framework\systemclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="bitmapclass.cpp">
+    <ClCompile Include="source\camera\cameraclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="baseshaderclass.cpp">
+    <ClCompile Include="source\texture\textureclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
