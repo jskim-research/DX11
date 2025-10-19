@@ -149,7 +149,7 @@ float CalculatePointLightBlinnPhongSpecular(float3 _cameraLocation, PixelInputTy
 	return specular; 
 }
 
-float4 CartoonPixelShader(PixelInputType input) : SV_TARGET
+float4 PSMain(PixelInputType input) : SV_TARGET
 {	
 	float4 color;
 	float4 textureColor;

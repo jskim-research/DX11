@@ -13,4 +13,7 @@ struct BaseShaderInput
 	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
 	ID3D11ShaderResourceView* gltfTextureArrayView;
+
+	// 다형성 있음을 알림
+	virtual ~BaseShaderInput() {}
 };

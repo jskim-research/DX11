@@ -37,7 +37,7 @@ struct PixelInputType
 	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
-PixelInputType CartoonVertexShader(VertexInputType input)
+PixelInputType VSMain(VertexInputType input)
 {
 	PixelInputType output;
 	input.position.w = 1.0f;

@@ -170,6 +170,72 @@ UINT BaseShaderClass::GetInputElementDesc(D3D11_INPUT_ELEMENT_DESC** pInputEleme
 	return numElements;
 }
 
+bool BaseShaderClass::SetShaderParameters(BaseShaderInput* input)
+{
+	HRESULT result;
+	MatrixBuffer* pMatrixData;
+	D3D11_MAPPED_SUBRESOURCE matrixData;
+
+	result = input->deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &matrixData);
+	if (FAILED(result))
+		return false;
+	pMatrixData = (MatrixBuffer*)matrixData.pData;
+	// XMMATRIX 는 row1, row2, row3, row4 4개의 XMVECTOR 로 구성되는데
+	// HLSL matrix 는 기본적으로 column-major 로 받으므로 col1, col2, col3, col4 로 해석해버림
+	// row vector matrix 를 유지하기 위해선 transpose 를 해서 보내야함
+	pMatrixData->world = XMMatrixTranspose(input->worldMatrix);
+	pMatrixData->view = XMMatrixTranspose(input->viewMatrix);
+	pMatrixData->projection = XMMatrixTranspose(input->projectionMatrix);
+	input->deviceContext->Unmap(m_matrixBuffer, 0);
+
+	// MatrixBuffer : register(b0) 이어야함
+	input->deviceContext->VSSetConstantBuffers(0, 1, &m_matrixBuffer);
+
+	return true;
+}
+
+void BaseShaderClass::ShutdownShader()
+{
+	if (m_matrixBuffer)
+	{
+		m_matrixBuffer->Release();
+		m_matrixBuffer = 0;
+	}
+
+	if (m_samplerState)
+	{
+		m_samplerState->Release();
+		m_samplerState = 0;
+	}
+
+	if (m_layout)
+	{
+		m_layout->Release();
+		m_layout = 0;
+	}
+
+	if (m_pixelShader)
+	{
+		m_pixelShader->Release();
+		m_pixelShader = 0;
+	}
+
+	if (m_vertexShader)
+	{
+		m_vertexShader->Release();
+		m_vertexShader = 0;
+	}
+}
+
+void BaseShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+{
+	deviceContext->IASetInputLayout(m_layout);
+	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
+	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
+	deviceContext->PSSetSamplers(0, 1, &m_samplerState);
+	deviceContext->DrawIndexed(indexCount, 0, 0);
+}
+
 void BaseShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
 	if (errorMessage)
@@ -207,71 +273,5 @@ void BaseShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hw
 	else
 	{
 		MessageBox(hwnd, shaderFilename, L"Missing Shader File", MB_OK);
-	}
-}
-
-bool BaseShaderClass::SetShaderParameters(BaseShaderInput* input)
-{
-	HRESULT result;
-	MatrixBuffer* pMatrixData;
-	D3D11_MAPPED_SUBRESOURCE matrixData;
-
-	result = input->deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &matrixData);
-	if (FAILED(result))
-		return false;
-	pMatrixData = (MatrixBuffer*)matrixData.pData;
-	// XMMATRIX 는 row1, row2, row3, row4 4개의 XMVECTOR 로 구성되는데
-	// HLSL matrix 는 기본적으로 column-major 로 받으므로 col1, col2, col3, col4 로 해석해버림
-	// row vector matrix 를 유지하기 위해선 transpose 를 해서 보내야함
-	pMatrixData->world = XMMatrixTranspose(input->worldMatrix);
-	pMatrixData->view = XMMatrixTranspose(input->viewMatrix);
-	pMatrixData->projection = XMMatrixTranspose(input->projectionMatrix);
-	input->deviceContext->Unmap(m_matrixBuffer, 0);
-
-	input->deviceContext->VSSetConstantBuffers(0, 1, &m_matrixBuffer);
-
-	return true;
-}
-
-void BaseShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
-{
-	deviceContext->IASetInputLayout(m_layout);
-	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
-	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
-	// deviceContext->PSSetSamplers(0, 1, &m_samplerState);
-	deviceContext->DrawIndexed(indexCount, 0, 0);
-
-}
-
-void BaseShaderClass::ShutdownShader()
-{
-	if (m_matrixBuffer)
-	{
-		m_matrixBuffer->Release();
-		m_matrixBuffer = 0;
-	}
-
-	if (m_samplerState)
-	{
-		m_samplerState->Release();
-		m_samplerState = 0;
-	}
-
-	if (m_layout)
-	{
-		m_layout->Release();
-		m_layout = 0;
-	}
-
-	if (m_pixelShader)
-	{
-		m_pixelShader->Release();
-		m_pixelShader = 0;
-	}
-
-	if (m_vertexShader)
-	{
-		m_vertexShader->Release();
-		m_vertexShader = 0;
 	}
 }

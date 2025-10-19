@@ -32,20 +32,22 @@ public:
 	BaseShaderClass(const wchar_t* vsFilename, const wchar_t* psFilename);
 	virtual ~BaseShaderClass();
 
+	/*
+	*	공통 인터페이스로 자식 클래스에서 따로 override 하지 않음
+	*/
 	bool Initialize(ID3D11Device* device, HWND hwnd);
 	bool Render(BaseShaderInput* input, int indexCount);
 	void Shutdown();
 
 protected:
-	bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename);
+	virtual bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename);
 	virtual UINT GetInputElementDesc(D3D11_INPUT_ELEMENT_DESC** pInputElementDesc) const;
-	void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
-
 	// 자식 클래스에서 BaseShaderInput 을 dynamic_cast 등을 통해 캐스팅해서 사용해야함
-	// assert 를 통해 잘못된 입력 방지하기
 	virtual bool SetShaderParameters(BaseShaderInput* input);
-	void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
 	virtual void ShutdownShader();
+
+	void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
+	void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
 private:
 	ID3D11VertexShader* m_vertexShader;

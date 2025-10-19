@@ -76,7 +76,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	m_CartoonShader = new CartoonShaderClass;
+	m_CartoonShader = new CartoonShaderClass(L"./hlsl/cartoon.vs", L"./hlsl/cartoon.ps");
 	result = m_CartoonShader->Initialize(m_Direct3D->GetDevice(), hwnd);
 	if (!result)
 	{
