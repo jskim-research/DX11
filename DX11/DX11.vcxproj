@@ -141,6 +141,8 @@
     <ClInclude Include="include\model\modelclass.h" />
     <ClInclude Include="include\shader\baseshaderclass.h" />
     <ClInclude Include="include\shader\baseshaderinput.h" />
+    <ClInclude Include="include\shader\bitmapshaderclass.h" />
+    <ClInclude Include="include\shader\bitmapshaderinput.h" />
     <ClInclude Include="include\shader\cartoonshaderclass.h" />
     <ClInclude Include="include\shader\cartoonshaderinput.h" />
     <ClInclude Include="include\shader\colorshaderclass.h" />
@@ -174,6 +176,7 @@
     <ClCompile Include="source\model\bitmapclass.cpp" />
     <ClCompile Include="source\model\modelclass.cpp" />
     <ClCompile Include="source\shader\baseshaderclass.cpp" />
+    <ClCompile Include="source\shader\bitmapshaderclass.cpp" />
     <ClCompile Include="source\shader\cartoonshaderclass.cpp" />
     <ClCompile Include="source\shader\colorshaderclass.cpp" />
     <ClCompile Include="source\shader\lightshader.cpp" />

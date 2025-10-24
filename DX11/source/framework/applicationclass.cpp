@@ -13,6 +13,8 @@ ApplicationClass::ApplicationClass()
 	m_Bitmap = 0;
 	m_BaseShader = 0;
 	m_BaseShaderInput = 0;
+	m_BitmapShader = 0;
+	m_BitmapShaderInput = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -92,6 +94,14 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_BitmapShader = new BitmapShaderClass(L"./hlsl/bitmap.vs", L"./hlsl/bitmap.ps");
+	result = m_BitmapShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the bitmap shader object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_Bitmap = new BitmapClass;
 	strcpy_s(objFileName1, "./data/Bitmap.txt");
 	strcpy_s(textureFilename, "./data/stone01.tga");
@@ -119,6 +129,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	m_CartoonShaderInput = new CartoonShaderInput;
 	m_BaseShaderInput = new BaseShaderInput;
+	m_BitmapShaderInput = new BitmapShaderInput;
 
 
 	return true;
@@ -126,6 +137,19 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+	if (m_BitmapShaderInput)
+	{
+		delete m_BitmapShaderInput;
+		m_BitmapShaderInput = 0;
+	}
+
+	if (m_BitmapShader)
+	{
+		m_BitmapShader->Shutdown();
+		delete m_BitmapShader;
+		m_BitmapShader = 0;
+	}
+
 	if (m_BaseShaderInput)
 	{
 		delete m_BaseShaderInput;
@@ -299,6 +323,9 @@ bool ApplicationClass::Render(float rotation)
 		return false;
 	}
 
+	// outline 용으로 활성화했던 것 다시 초기화
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
+
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
@@ -370,7 +397,7 @@ bool ApplicationClass::Render(float rotation)
 	result = m_BaseShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
 	if (!result)
 		return false;
-
+	
 	// Bitmap 렌더링
 	// 1280 x 720
 	m_Bitmap->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 150, 360 - 150);
@@ -381,28 +408,21 @@ bool ApplicationClass::Render(float rotation)
 	viewMatrix = XMMatrixIdentity();
 	m_Direct3D->GetOrthoMatrix(projectionMatrix);
 
-	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
-	m_CartoonShaderInput->worldMatrix = worldMatrix;
-	m_CartoonShaderInput->viewMatrix = viewMatrix;
-	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	m_CartoonShaderInput->gltfTextureArrayView = m_Bitmap->GetGltfTextures();
-	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
-	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
-	m_CartoonShaderInput->pointLights = m_PointLights;
-	// m_CartoonShaderInput->pointLightsNum = NUM_LIGHTS;
-	m_CartoonShaderInput->pointLightsNum = 0;
-	m_CartoonShaderInput->isOutline = false;
-	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
+	m_BitmapShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_BitmapShaderInput->worldMatrix = worldMatrix;
+	m_BitmapShaderInput->viewMatrix = viewMatrix;
+	m_BitmapShaderInput->projectionMatrix = projectionMatrix;
+	m_BitmapShaderInput->gltfTextureArrayView = m_Bitmap->GetGltfTextures();
+	// 이걸 꺼야 depth test 무시하고 screen 에 바로 뜸
 	m_Direct3D->SetZBufferOnOff(false);
 
-	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Bitmap->GetIndexCount());
+	result = m_BitmapShader->Render(m_BitmapShaderInput, m_Bitmap->GetIndexCount());
 	if (!result)
 	{
 		return false;
 	}
 
 	m_Direct3D->SetZBufferOnOff(true);
-
 	
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();

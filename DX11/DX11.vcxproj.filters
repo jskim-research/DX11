@@ -108,6 +108,12 @@
     <ClInclude Include="include\texture\textureclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="include\shader\bitmapshaderclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\shader\bitmapshaderinput.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -159,6 +165,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="source\texture\textureclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="source\shader\bitmapshaderclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

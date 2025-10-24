@@ -1,0 +1,17 @@
+Texture2DArray textures : register(t0);
+SamplerState SampleType : register(s0);
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
+	float2 tex : TEXCOORD;
+	nointerpolation uint imageIndex : TEXCOORD1;
+};
+
+float4 PSMain(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+	textureColor = textures.Sample(SampleType, float3(input.tex, input.imageIndex));
+	return textureColor;
+}

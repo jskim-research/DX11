@@ -21,6 +21,8 @@
 #include "model/bitmapclass.h"
 #include "shader/baseshaderclass.h"
 #include "shader/baseshaderinput.h"
+#include "shader/bitmapshaderclass.h"
+#include "shader/bitmapshaderinput.h"
 
 
 /////////////
@@ -66,5 +68,6 @@ private:
 	BitmapClass* m_Bitmap;
 	BaseShaderClass* m_BaseShader;
 	BaseShaderInput* m_BaseShaderInput;
-
+	BitmapShaderClass* m_BitmapShader;
+	BitmapShaderInput* m_BitmapShaderInput;
 };

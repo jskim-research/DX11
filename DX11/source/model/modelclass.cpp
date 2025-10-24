@@ -311,6 +311,7 @@ bool ModelClass::MakeVertexBuffer(ID3D11Device* device, ObjectParser::CommonVert
 
 	// Set up the description of the static vertex buffer.
 	vertexBufferDesc.Usage = m_vertexBufferUsage;
+	// Byte 를 넉넉하게 잡아서, BaseShaderClass 에서 BaseVertexType 만 써도 정상 작동하는 것
 	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::CommonVertexType) * m_vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = m_vertexBufferCPUAccessFlags;
