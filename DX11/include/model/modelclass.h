@@ -41,24 +41,22 @@ public:
 	bool ImportFromGLTF(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* fileName);
 	bool ImportFromCustomFile(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* fileName, const char* textureFileName);
 
-private:
+protected:
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
-	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, const char*);
+	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, const vector<const char*>&);
 	void ReleaseTexture();
 
 	bool MakeVertexBuffer(ID3D11Device* device, ObjectParser::CommonVertexType* vertices);
 	bool MakeIndexBuffer(ID3D11Device* device, unsigned long* indices);
 
-protected:
 	D3D11_USAGE m_vertexBufferUsage;
 	UINT m_vertexBufferCPUAccessFlags;
 	D3D11_USAGE m_indexBufferUsage;
 	UINT m_indexBufferCPUAccessFlags;
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
 
-private:
 	int m_vertexCount, m_indexCount;
 	TextureClass* m_Texture;
 	ObjectParser* m_objectParser;

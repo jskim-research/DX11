@@ -23,6 +23,7 @@
 #include "shader/baseshaderinput.h"
 #include "shader/bitmapshaderclass.h"
 #include "shader/bitmapshaderinput.h"
+#include "model/spriteclass.h"
 
 
 /////////////
@@ -70,4 +71,5 @@ private:
 	BaseShaderInput* m_BaseShaderInput;
 	BitmapShaderClass* m_BitmapShader;
 	BitmapShaderInput* m_BitmapShaderInput;
+	SpriteClass* m_Sprite;
 };

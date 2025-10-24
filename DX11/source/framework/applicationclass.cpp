@@ -15,6 +15,7 @@ ApplicationClass::ApplicationClass()
 	m_BaseShaderInput = 0;
 	m_BitmapShader = 0;
 	m_BitmapShaderInput = 0;
+	m_Sprite = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -112,6 +113,16 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_Sprite = new SpriteClass;
+	strcpy_s(objFileName1, "./data/Bitmap.txt");
+	strcpy_s(textureFilename, "./data/sprite_data_01.txt");
+	result = m_Sprite->ImportFromSpriteFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName1, textureFilename);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not import the sprite object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_DirectionalLight = new LightClass;
 	m_DirectionalLight->SetDiffuseColor(1, 1, 1, 1);
 	m_DirectionalLight->SetDirection(-1, -1, 1);
@@ -137,6 +148,13 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+	if (m_Sprite)
+	{
+		m_Sprite->Shutdown();
+		delete m_Sprite;
+		m_Sprite = 0;
+	}
+
 	if (m_BitmapShaderInput)
 	{
 		delete m_BitmapShaderInput;
@@ -164,6 +182,7 @@ void ApplicationClass::Shutdown()
 
 	if (m_Bitmap)
 	{
+		m_Bitmap->Shutdown();
 		delete m_Bitmap;
 		m_Bitmap = 0;
 	}
@@ -402,8 +421,6 @@ bool ApplicationClass::Render(float rotation)
 	// 1280 x 720
 	m_Bitmap->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 150, 360 - 150);
 	m_Bitmap->Render(m_Direct3D->GetDeviceContext());
-
-
 	worldMatrix = XMMatrixIdentity();
 	viewMatrix = XMMatrixIdentity();
 	m_Direct3D->GetOrthoMatrix(projectionMatrix);
@@ -423,6 +440,33 @@ bool ApplicationClass::Render(float rotation)
 	}
 
 	m_Direct3D->SetZBufferOnOff(true);
+
+	// Sprite 렌더링
+	// Sprite 가 Bitmap 을 상속하므로 Input 등은 그대로 사용하였음
+	// 1280 x 720
+	m_Sprite->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 400, 360 - 150);
+	m_Sprite->Render(m_Direct3D->GetDeviceContext());
+	worldMatrix = XMMatrixIdentity();
+	viewMatrix = XMMatrixIdentity();
+	m_Direct3D->GetOrthoMatrix(projectionMatrix);
+
+	m_BitmapShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_BitmapShaderInput->worldMatrix = worldMatrix;
+	m_BitmapShaderInput->viewMatrix = viewMatrix;
+	m_BitmapShaderInput->projectionMatrix = projectionMatrix;
+	m_BitmapShaderInput->gltfTextureArrayView = m_Sprite->GetGltfTextures();
+	// 이걸 꺼야 depth test 무시하고 screen 에 바로 뜸
+	m_Direct3D->SetZBufferOnOff(false);
+
+	result = m_BitmapShader->Render(m_BitmapShaderInput, m_Sprite->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
+	m_Direct3D->SetZBufferOnOff(true);
+
+
 	
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();

@@ -3,6 +3,9 @@
 
 #include <d3d11.h>
 #include <stdio.h>
+#include <vector>
+
+using namespace std;
 
 class TextureClass
 {
@@ -21,7 +24,7 @@ public:
 	TextureClass(const TextureClass&);
 	~TextureClass();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, const char*);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, const vector<const char*>&);
 	void Shutdown();
 
 	ID3D11ShaderResourceView* GetTexture();

@@ -13,5 +13,6 @@ float4 PSMain(PixelInputType input) : SV_TARGET
 {
 	float4 textureColor;
 	textureColor = textures.Sample(SampleType, float3(input.tex, input.imageIndex));
+	
 	return textureColor;
 }

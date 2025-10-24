@@ -1,5 +1,8 @@
 #include "model/modelclass.h"
 #include "framework/d3dclass.h"
+#include <fstream>
+
+using namespace std;
 
 
 ModelClass::ModelClass():
@@ -196,9 +199,11 @@ bool ModelClass::ImportFromCustomFile(ID3D11Device* device, ID3D11DeviceContext*
 
 	if (textureFileName)
 	{
+		vector<const char*> filenames;
+		filenames.push_back(textureFileName);
 		// 일단 기존 구현해둔 LoadTexture 를 쓰긴했는데
 		// 깔끔하게 정리할 필요 있음
-		if (!LoadTexture(device, deviceContext, textureFileName))
+		if (!LoadTexture(device, deviceContext, filenames))
 			return false;
 
 		m_textureArrayView = m_Texture->GetTexture();
@@ -264,7 +269,7 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename)
+bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const vector<const char*>& filenames)
 {
 	bool result;
 
@@ -272,7 +277,7 @@ bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceCo
 	if (!m_Texture)
 		m_Texture = new TextureClass;
 
-	result = m_Texture->Initialize(device, deviceContext, filename);
+	result = m_Texture->Initialize(device, deviceContext, filenames);
 	if (!result)
 	{
 		return false;

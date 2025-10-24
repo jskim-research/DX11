@@ -15,7 +15,7 @@ TextureClass::~TextureClass()
 {
 }
 
-bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* filename)
+bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const vector<const char*>& filenames)
 {
     bool result;
     int height, width;
@@ -24,19 +24,26 @@ bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
     unsigned int rowPitch;
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 
-    // Load the targa image data into memory.
-    result = LoadTarga32Bit(filename);
-    if (!result)
+    vector<unsigned char*> images;
+
+    for (UINT i = 0; i < filenames.size(); i++)
     {
-        return false;
+        // Load the targa image data into memory.
+        result = LoadTarga32Bit(filenames[i]);
+        if (!result)
+        {
+            return false;
+        }
+
+        images.push_back(m_targaData);   
     }
 
     // Setup the description of the texture.
     textureDesc.Height = m_height;
     textureDesc.Width = m_width;
-    textureDesc.MipLevels = 0;
-    textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = images.size();
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -53,15 +60,26 @@ bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 
     // Set the row pitch of the targa image data.
     rowPitch = (m_width * 4) * sizeof(unsigned char);
-    // Copy the targa image data into the texture.
-    deviceContext->UpdateSubresource(m_texture, 0, NULL, m_targaData, rowPitch, 0);
+
+    for (int i = 0; i < images.size(); i++)
+    {
+        // Copy the targa image data into the texture.
+        deviceContext->UpdateSubresource(
+            m_texture,
+            D3D11CalcSubresource(0, i, textureDesc.MipLevels),
+            NULL,
+            images[i],
+            rowPitch,
+            0);
+    }
+    
     // Setup the shader resource view description.
     srvDesc.Format = textureDesc.Format;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
     srvDesc.Texture2DArray.MostDetailedMip = 0;
     srvDesc.Texture2DArray.MipLevels = -1;
     srvDesc.Texture2DArray.FirstArraySlice = 0;
-    srvDesc.Texture2DArray.ArraySize = 1;
+    srvDesc.Texture2DArray.ArraySize = images.size();
 
     // Create the shader resource view for the texture.
     hResult = device->CreateShaderResourceView(m_texture, &srvDesc, &m_textureView);
@@ -74,7 +92,10 @@ bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
     deviceContext->GenerateMips(m_textureView);
 
     // Release the targa image data now that the image data has been loaded into the texture.
-    delete[] m_targaData;
+    for (unsigned char* image : images)
+    {
+        delete[] image;
+    }
     m_targaData = 0;
 
     return true;
