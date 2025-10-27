@@ -46,7 +46,7 @@ protected:
 	virtual bool SetShaderParameters(BaseShaderInput* input);
 	virtual void ShutdownShader();
 
-	void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
+	virtual void RenderShader(BaseShaderInput* input, int indexCount);
 	void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
 private:

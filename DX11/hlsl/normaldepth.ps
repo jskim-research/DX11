@@ -1,0 +1,21 @@
+Texture2D depthMap : register(t0);
+SamplerState SampleType : register(s0);
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
+	float2 tex : TEXCOORD;
+};
+
+float4 PSMain(PixelInputType input) : SV_TARGET
+{
+	// 실험용으로 하드 코딩해둔 screen width, height 는 추후에 바꿀 예정
+	// SV_POSITION 에 해당하는 input.position 은 이미 rasterizer 에 의해
+	// Screen Space 로 변환된 상태 (왼쪽 위 (0, 0), 오른쪽 아래 (width, height))
+	// 따라서 (width, height) 로 나눠주는 것으로 texture 의 uv 좌표와 일치 가능
+	// screen xy -> [0, 1] mapping
+	float2 uv = input.position.xy / float2(1280, 720);	
+	float depth = depthMap.Sample(SampleType, uv).r;	
+	return 1 - depth;
+}

@@ -45,6 +45,20 @@ public:
     inline int GetScreenWidth() const { return m_screenWidth; }
     inline int GetScreenHeight() const { return m_screenHeight; }
 
+    // 포인터로 반환한다는 점에서 Get 으로 선언하는 의미가 사라짐
+    // d3dclass 가 가지고 있는 자원을 shader 쪽에서 참조해서 pipeline 에 bind 하는 구조라 그런데
+    // shader 쪽으로 뺄 수 있는 지 확인해봐야함.
+    ID3D11ShaderResourceView** GetDepthStencilSRV();
+    ID3D11ShaderResourceView** GetAlbedoSRV();
+    ID3D11ShaderResourceView** GetNormalSRV();
+
+    void UnbindDepthStencilView();
+    /*
+    *   OMSetRenderTargets 기본 세팅으로 변경
+    */
+    void BindStandard_RTV_SRV();
+    void BindGBuffer();
+
 private:
     int m_screenWidth;
     int m_screenHeight;
@@ -55,9 +69,28 @@ private:
     ID3D11Device* m_device;
     ID3D11DeviceContext* m_deviceContext;
     ID3D11RenderTargetView* m_renderTargetView;
+    /*
+    *   Depth Texture => RTV, SRV
+    */
     ID3D11Texture2D* m_depthStencilBuffer;
     ID3D11DepthStencilState* m_depthStencilState;
     ID3D11DepthStencilView* m_depthStencilView;
+    ID3D11ShaderResourceView* m_depthStencilSRV;
+
+    /*
+    *   Albedo Texture => RTV, SRV
+    */
+    ID3D11Texture2D* m_albedoTexture;
+    ID3D11RenderTargetView* m_albedoRTV;
+    ID3D11ShaderResourceView* m_albedoSRV;
+
+    /*
+    *   Normal Texture => RTV, SRV
+    */
+    ID3D11Texture2D* m_normalTexture;
+    ID3D11RenderTargetView* m_normalRTV;
+    ID3D11ShaderResourceView* m_normalSRV;
+
     ID3D11RasterizerState* m_rasterState;
     ID3D11RasterizerState* m_outlineRasterState;
     XMMATRIX m_projectionMatrix;

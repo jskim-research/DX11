@@ -40,6 +40,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_TEXTURE2D_DESC depthBufferDesc;
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+	D3D11_TEXTURE2D_DESC textureDesc;  // Albedo, Normal 등 texture 공용 사용 설정
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;  // SRV 들 공용 사용 설정
 	D3D11_RASTERIZER_DESC rasterDesc;
 	D3D11_RASTERIZER_DESC outlineRasterDesc;
 	float fieldOfView, screenAspect;
@@ -247,11 +249,14 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	depthBufferDesc.Height = screenHeight;
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
-	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	// SRV 포맷은 단순 부동소수점 => R32_FLOAT 같은 형태
+	// DSV 포맷은 정수와 깊이 비트가 섞이는 구조
+	// 두 포맷은 다르게 해석해야 하므로 TYPELESS 로 설정
+	depthBufferDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	depthBufferDesc.SampleDesc.Count = 1;
 	depthBufferDesc.SampleDesc.Quality = 0;
 	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	depthBufferDesc.CPUAccessFlags = 0;
 	depthBufferDesc.MiscFlags = 0;
 
@@ -322,6 +327,74 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
 	// back buffer 에 렌더링하고 swap 하도록 될 것
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = -1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+
+	result = m_device->CreateShaderResourceView(m_depthStencilBuffer, &srvDesc, &m_depthStencilSRV);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	/*
+	*	G-Buffer 구성
+	*	Albedo, Normal, ...
+	*/
+
+	// albedo -> RGBA -> 8x4 bits
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Height = screenHeight;
+	textureDesc.Width = screenWidth;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+
+	result = m_device->CreateTexture2D(&textureDesc, 0, &m_albedoTexture);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	result = m_device->CreateRenderTargetView(m_albedoTexture, 0, &m_albedoRTV);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	result = m_device->CreateShaderResourceView(m_albedoTexture, 0, &m_albedoSRV);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	result = m_device->CreateTexture2D(&textureDesc, 0, &m_normalTexture);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	result = m_device->CreateRenderTargetView(m_normalTexture, 0, &m_normalRTV);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	result = m_device->CreateShaderResourceView(m_normalTexture, 0, &m_normalSRV);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
 
 	// Setup the raster description which will determine how and what polygons will be drawn.
 	// wireframe mode, mesh draw, ... 등의 모드 설정 가능
@@ -466,6 +539,8 @@ void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 
 	// Clear the back buffer.
 	m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
+	m_deviceContext->ClearRenderTargetView(m_albedoRTV, color);
+	m_deviceContext->ClearRenderTargetView(m_normalRTV, color);
 
 	// Clear the depth buffer.
 	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -564,4 +639,35 @@ void D3DClass::SetZBufferOnOff(bool isZBufferOn)
 	{
 		m_deviceContext->OMSetDepthStencilState(m_depthStencilStateNotUsingZBuffer, 1);
 	}
+}
+
+ID3D11ShaderResourceView** D3DClass::GetDepthStencilSRV()
+{
+	return &m_depthStencilSRV;
+}
+
+ID3D11ShaderResourceView** D3DClass::GetAlbedoSRV()
+{
+	return &m_albedoSRV;
+}
+
+ID3D11ShaderResourceView** D3DClass::GetNormalSRV()
+{
+	return &m_normalSRV;
+}
+
+void D3DClass::UnbindDepthStencilView()
+{
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+}
+
+void D3DClass::BindStandard_RTV_SRV()
+{
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+}
+
+void D3DClass::BindGBuffer()
+{
+	ID3D11RenderTargetView* RTVs[2] { m_albedoRTV, m_normalRTV };
+	m_deviceContext->OMSetRenderTargets(2, RTVs, m_depthStencilView);
 }

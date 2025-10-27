@@ -24,6 +24,8 @@
 #include "shader/bitmapshaderclass.h"
 #include "shader/bitmapshaderinput.h"
 #include "model/spriteclass.h"
+#include "shader/normaldepthshaderclass.h"
+#include "shader/gbuffershaderclass.h"
 
 
 /////////////
@@ -61,6 +63,9 @@ private:
 	D3DClass* m_Direct3D;
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
+	ModelClass* m_Cube;
+	// 전체 스크린 픽셀 쉐이딩을 위해 넣는 triangle
+	ModelClass* m_FullScreenTriangle;
 	LightShaderClass* m_LightShader;
 	CartoonShaderClass* m_CartoonShader;
 	CartoonShaderInput* m_CartoonShaderInput;
@@ -72,4 +77,6 @@ private:
 	BitmapShaderClass* m_BitmapShader;
 	BitmapShaderInput* m_BitmapShaderInput;
 	SpriteClass* m_Sprite;
+	NormalDepthShaderClass* m_NormalDepthShader;
+	GBufferShaderClass* m_GBufferShader;
 };

@@ -16,6 +16,10 @@ ApplicationClass::ApplicationClass()
 	m_BitmapShader = 0;
 	m_BitmapShaderInput = 0;
 	m_Sprite = 0;
+	m_NormalDepthShader = 0;
+	m_Cube = 0;
+	m_GBufferShader = 0;
+	m_FullScreenTriangle = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -29,8 +33,7 @@ ApplicationClass::~ApplicationClass()
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	char textureFilename[128];
-	char objFileName1[128];
-	char objFileName2[128];
+	char objFileName[128];
 	bool result;
 
 
@@ -49,15 +52,21 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetRotation(0, 0, 0);
 
 	m_Model = new ModelClass;
-	strcpy_s(objFileName1, "./data/burnice.glb");
-	strcpy_s(objFileName2, "./data/Cube.txt");
-	strcpy_s(textureFilename, "./data/stone01.tga");
-	// result = m_Model->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName2, textureFilename);
-	result = m_Model->ImportFromGLTF(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName1);
-	// result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
+	strcpy_s(objFileName, "./data/burnice.glb");
+	result = m_Model->ImportFromGLTF(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not import the model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_Cube = new ModelClass;
+	strcpy_s(objFileName, "./data/Cube.txt");
+	strcpy_s(textureFilename, "./data/stone01.tga");
+	result = m_Cube->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName, textureFilename);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not import the cube object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -103,10 +112,26 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_NormalDepthShader = new NormalDepthShaderClass(L"./hlsl/normaldepth.vs", L"./hlsl/normaldepth.ps");
+	result = m_NormalDepthShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the normal depth shader object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_GBufferShader = new GBufferShaderClass(L"./hlsl/gbuffer_combine.vs", L"./hlsl/gbuffer_combine.ps");
+	result = m_GBufferShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the gbuffer shader object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_Bitmap = new BitmapClass;
-	strcpy_s(objFileName1, "./data/Bitmap.txt");
+	strcpy_s(objFileName, "./data/Bitmap.txt");
 	strcpy_s(textureFilename, "./data/stone01.tga");
-	result = m_Bitmap->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName1, textureFilename);
+	result = m_Bitmap->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName, textureFilename);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not import the bitmap object.", L"Error", MB_OK);
@@ -114,12 +139,22 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	m_Sprite = new SpriteClass;
-	strcpy_s(objFileName1, "./data/Bitmap.txt");
+	strcpy_s(objFileName, "./data/Bitmap.txt");
 	strcpy_s(textureFilename, "./data/sprite_data_01.txt");
-	result = m_Sprite->ImportFromSpriteFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName1, textureFilename);
+	result = m_Sprite->ImportFromSpriteFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName, textureFilename);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not import the sprite object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_FullScreenTriangle = new ModelClass;
+	strcpy_s(objFileName, "./data/FullScreenTriangle.txt");
+	// strcpy_s(textureFilename, "./data/sprite_data_01.txt");
+	result = m_FullScreenTriangle->ImportFromCustomFile(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), objFileName, nullptr);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not import the full screen triangle object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -148,6 +183,33 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+	if (m_FullScreenTriangle)
+	{
+		m_FullScreenTriangle->Shutdown();
+		delete m_FullScreenTriangle;
+		m_FullScreenTriangle = 0;
+	}
+
+	if (m_GBufferShader)
+	{
+		m_GBufferShader->Shutdown();
+		delete m_GBufferShader;
+		m_GBufferShader = 0;
+	}
+	if (m_Cube)
+	{
+		m_Cube->Shutdown();
+		delete m_Cube;
+		m_Cube = 0;
+	}
+
+	if (m_NormalDepthShader)
+	{
+		m_NormalDepthShader->Shutdown();
+		delete m_NormalDepthShader;
+		m_NormalDepthShader = 0;
+	}
+
 	if (m_Sprite)
 	{
 		m_Sprite->Shutdown();
@@ -318,11 +380,9 @@ bool ApplicationClass::Render(float rotation)
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
 	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
 	translateMatrix = XMMatrixTranslation(0, -1, -13);
-	// 행렬이 곱해지는 순서가 SRT 가 되도록 한다.
-	// row major 이므로 왼쪽부터 곱해짐
-	// 정상 순서 (SRT)
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
 
+	m_CartoonShaderInput->d3dclass = m_Direct3D;
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
@@ -393,11 +453,34 @@ bool ApplicationClass::Render(float rotation)
 	}
 
 	/*
-	*	BaseShader 렌더링 테스트
+	*	G-Buffer 모두 합쳐서 그리는 Shader
+	*	참고로 모든 pixel 에 overwrite 하기 때문에 이전에 그린 것들 전부 사라진다.
+	*/
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	m_CartoonShaderInput->gltfTextureArrayView = m_FullScreenTriangle->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+
+	m_FullScreenTriangle->Render(m_Direct3D->GetDeviceContext());
+	result = m_GBufferShader->Render(m_CartoonShaderInput, m_FullScreenTriangle->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
+	/*
+	*	NormalDepthShader 렌더링 테스트
+	*	Depth Image 나옴
 	*/
 
 	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	translateMatrix = XMMatrixTranslation(1, -1, -5);
+	translateMatrix = XMMatrixTranslation(2, -1, -5);
 	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
 
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
@@ -413,10 +496,32 @@ bool ApplicationClass::Render(float rotation)
 	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
-	result = m_BaseShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
+	result = m_NormalDepthShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
+	if (!result)
+		return false;
+
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
+	translateMatrix = XMMatrixTranslation(-1, 0, -13);
+	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
+
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	m_CartoonShaderInput->gltfTextureArrayView = m_Cube->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
+
+	m_Cube->Render(m_Direct3D->GetDeviceContext());
+	result = m_NormalDepthShader->Render(m_CartoonShaderInput, m_Cube->GetIndexCount());
 	if (!result)
 		return false;
 	
+
 	// Bitmap 렌더링
 	// 1280 x 720
 	m_Bitmap->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 150, 360 - 150);
@@ -430,6 +535,7 @@ bool ApplicationClass::Render(float rotation)
 	m_BitmapShaderInput->viewMatrix = viewMatrix;
 	m_BitmapShaderInput->projectionMatrix = projectionMatrix;
 	m_BitmapShaderInput->gltfTextureArrayView = m_Bitmap->GetGltfTextures();
+	m_BitmapShaderInput->d3dclass = m_Direct3D;
 	// 이걸 꺼야 depth test 무시하고 screen 에 바로 뜸
 	m_Direct3D->SetZBufferOnOff(false);
 
@@ -465,7 +571,6 @@ bool ApplicationClass::Render(float rotation)
 	}
 
 	m_Direct3D->SetZBufferOnOff(true);
-
 
 	
 	// Present the rendered scene to the screen.

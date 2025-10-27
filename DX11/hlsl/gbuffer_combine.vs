@@ -11,8 +11,6 @@ struct VertexInputType
 	float4 position : POSITION;
 	float3 normal : NORMAL;
 	float2 tex : TEXCOORD0;
-	float4 color : COLOR;
-	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
 struct PixelInputType
@@ -20,20 +18,20 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 tex : TEXCOORD;
-	nointerpolation uint imageIndex : TEXCOORD1;
 };
+
+
 
 PixelInputType VSMain(VertexInputType input)
 {
 	PixelInputType output;
 
 	input.position.w = 1.0f;
-	// Bitmap 은 일부러 CPU 단에서 값 조정해서 바로 화면에 뜨도록 함
-	// projectionMatrix 도 Orthomatrix 임
-	output.position = mul(input.position, projectionMatrix);
+	// gbuffer combine 시 (-1, -1) 부터 (1, 1) 까지 덮는 형태의 triangle vertices 입력됨
+	// 이에 따라 pixel shader 에서 모든 픽셀이 그려질 수 있도록 함
+	output.position = input.position;
 	output.normal = input.normal;
 	output.tex = input.tex;
-	output.imageIndex = input.imageIndex;
 
 	return output;
 }

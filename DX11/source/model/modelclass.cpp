@@ -300,12 +300,16 @@ void ModelClass::ReleaseTexture()
 		m_textureArray->Release();
 		m_textureArray = 0;
 	}
-
+	
+	// m_textureArrayView 가 사실상 m_Texture 내의 Texture 를 가리키고 있어서
+	// 위에서 m_Texture 를 해제해주기 때문에 다시 할 필요가 없음
+	/*
 	if (m_textureArrayView)
 	{
 		m_textureArrayView->Release();
-		m_textureArrayView = 0;
+		m_textureArrayView = nullptr;
 	}
+	*/
 }
 
 bool ModelClass::MakeVertexBuffer(ID3D11Device* device, ObjectParser::CommonVertexType* vertices)

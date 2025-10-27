@@ -48,7 +48,7 @@ bool BaseShaderClass::Render(BaseShaderInput* input, int indexCount)
 	if (!result)
 		return false;
 
-	RenderShader(input->deviceContext, indexCount);
+	RenderShader(input, indexCount);
 	
 	return true;
 }
@@ -227,13 +227,13 @@ void BaseShaderClass::ShutdownShader()
 	}
 }
 
-void BaseShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void BaseShaderClass::RenderShader(BaseShaderInput* input, int indexCount)
 {
-	deviceContext->IASetInputLayout(m_layout);
-	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
-	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
-	deviceContext->PSSetSamplers(0, 1, &m_samplerState);
-	deviceContext->DrawIndexed(indexCount, 0, 0);
+	input->deviceContext->IASetInputLayout(m_layout);
+	input->deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
+	input->deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
+	input->deviceContext->PSSetSamplers(0, 1, &m_samplerState);
+	input->deviceContext->DrawIndexed(indexCount, 0, 0);
 }
 
 void BaseShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)

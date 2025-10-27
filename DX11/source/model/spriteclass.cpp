@@ -1,8 +1,7 @@
 #include "model/spriteclass.h"
 #include <fstream>
 
-SpriteClass::SpriteClass():
-	m_prevImageIndex(-1)
+SpriteClass::SpriteClass()
 {
 }
 

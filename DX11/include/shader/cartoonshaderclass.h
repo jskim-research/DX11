@@ -59,6 +59,7 @@ private:
 	virtual UINT GetInputElementDesc(D3D11_INPUT_ELEMENT_DESC** pInputElementDesc) const override;
 	virtual bool SetShaderParameters(BaseShaderInput*) override;
 	virtual void ShutdownShader() override;
+	virtual void RenderShader(BaseShaderInput* input, int indexCount) override;
 
 private:
 	ID3D11Buffer* m_lightBuffer;

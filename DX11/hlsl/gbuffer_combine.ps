@@ -1,0 +1,21 @@
+Texture2D albedoMap : register(t0);
+Texture2D normalMap : register(t1);
+Texture2D depthMap : register(t2);
+SamplerState SampleType : register(s0);
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
+	float2 tex : TEXCOORD;
+};
+
+float4 PSMain(PixelInputType input) : SV_TARGET
+{
+	// 하드코딩은 추후 수정 필요!!
+	float2 uv = input.position.xy / float2(1280, 720);
+	float4 albedo = albedoMap.Sample(SampleType, uv);
+	float4 normal = normalMap.Sample(SampleType, uv);
+	float depth = depthMap.Sample(SampleType, uv).r;
+	return 1 - depth;
+}

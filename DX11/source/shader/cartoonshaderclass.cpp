@@ -273,3 +273,11 @@ void CartoonShaderClass::ShutdownShader()
         m_cameraBuffer = 0;
     }
 }
+
+void CartoonShaderClass::RenderShader(BaseShaderInput* input, int indexCount)
+{
+    input->d3dclass->BindGBuffer();
+    BaseShaderClass::RenderShader(input, indexCount);
+    // Old setting 기억해뒀다가 바꾸는게 나을수도
+    input->d3dclass->BindStandard_RTV_SRV();
+}
