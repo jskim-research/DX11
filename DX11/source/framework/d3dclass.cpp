@@ -375,6 +375,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	// Normal, Position => 32x4 bits (xyzw, rgba)
+
 	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
 	result = m_device->CreateTexture2D(&textureDesc, 0, &m_normalTexture);
@@ -395,6 +397,23 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	result = m_device->CreateTexture2D(&textureDesc, 0, &m_positionTexture);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	result = m_device->CreateRenderTargetView(m_positionTexture, 0, &m_positionRTV);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	result = m_device->CreateShaderResourceView(m_positionTexture, 0, &m_positionSRV);
+	if (FAILED(result))
+	{
+		return false;
+	}
 
 	// Setup the raster description which will determine how and what polygons will be drawn.
 	// wireframe mode, mesh draw, ... 등의 모드 설정 가능
@@ -541,6 +560,7 @@ void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 	m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
 	m_deviceContext->ClearRenderTargetView(m_albedoRTV, color);
 	m_deviceContext->ClearRenderTargetView(m_normalRTV, color);
+	m_deviceContext->ClearRenderTargetView(m_positionRTV, color);
 
 	// Clear the depth buffer.
 	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -656,6 +676,11 @@ ID3D11ShaderResourceView** D3DClass::GetNormalSRV()
 	return &m_normalSRV;
 }
 
+ID3D11ShaderResourceView** D3DClass::GetPositionSRV()
+{
+	return &m_positionSRV;
+}
+
 void D3DClass::UnbindDepthStencilView()
 {
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
@@ -668,6 +693,6 @@ void D3DClass::BindStandard_RTV_SRV()
 
 void D3DClass::BindGBuffer()
 {
-	ID3D11RenderTargetView* RTVs[2] { m_albedoRTV, m_normalRTV };
-	m_deviceContext->OMSetRenderTargets(2, RTVs, m_depthStencilView);
+	ID3D11RenderTargetView* RTVs[3] { m_albedoRTV, m_normalRTV, m_positionRTV };
+	m_deviceContext->OMSetRenderTargets(3, RTVs, m_depthStencilView);
 }

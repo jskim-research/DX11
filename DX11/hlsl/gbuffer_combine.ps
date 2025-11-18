@@ -1,6 +1,7 @@
 Texture2D albedoMap : register(t0);
 Texture2D normalMap : register(t1);
-Texture2D depthMap : register(t2);
+Texture2D positionMap : register(t2);
+Texture2D depthMap : register(t3);
 SamplerState SampleType : register(s0);
 
 struct PixelInputType
@@ -10,12 +11,182 @@ struct PixelInputType
 	float2 tex : TEXCOORD;
 };
 
+cbuffer LightBuffer : register(b0)
+{
+	float4 diffuseColor;
+	float3 lightDirection;
+	// 16 의 배수 제약 만족시키기 위함
+	float padding;
+};
+
+cbuffer CameraBuffer : register(b1)
+{
+	float3 cameraLocation;
+	float cameraPadding;
+};
+
+/*************************************/
+/*            Custom Math            */
+/*************************************/
+
+float SmoothStep(float x);
+float CustomStep(float y, float x, float defaultValue);
+
+/*************************************/
+/*            Custom Light            */
+/*************************************/
+
+float4 CalculateDiffuse(float3 _lightDirection, float3 _normal);
+float4 CalculateCartoonDiffuse(float3 _lightDirection, float3 _normal);
+float4 CalculatePointLightDiffuse(float3 _lightPosition, float3 _inputPosition, float3 _inputNormal, float3 _attenuationFactors);
+float CalculatePhongSpecular(float3 _cameraLocation, float3 _inputPosition, float3 _inputNormal, float3 _lightDirection, float _specularShininess);
+float CalculateBlinnPhongSpecular(float3 _cameraLocation, float3 _inputPosition, float3 _inputNormal, float3 _lightDirection, float _specularShininess);
+float CalculatePointLightBlinnPhongSpecular(float3 _cameraLocation, float3 _inputPosition, float3 _inputNormal, float3 _lightPosition, float3 _attenuationFactors, float _specularShininess);
+
 float4 PSMain(PixelInputType input) : SV_TARGET
 {
 	// 하드코딩은 추후 수정 필요!!
 	float2 uv = input.position.xy / float2(1280, 720);
 	float4 albedo = albedoMap.Sample(SampleType, uv);
 	float4 normal = normalMap.Sample(SampleType, uv);
+	float4 position = positionMap.Sample(SampleType, uv);
 	float depth = depthMap.Sample(SampleType, uv).r;
-	return 1 - depth;
+
+	float2 texelSize = float2(1/1280.0, 1/720.0) * 1;
+
+	// e[row][col]
+	float4 e11 = normalMap.Sample(SampleType, uv + texelSize * float2(-1, -1));
+	float4 e21 = normalMap.Sample(SampleType, uv + texelSize * float2(-1, 0));
+	float4 e31 = normalMap.Sample(SampleType, uv + texelSize * float2(-1, 1));
+	float4 e12 = normalMap.Sample(SampleType, uv + texelSize * float2(0, -1));
+	float4 e22 = normalMap.Sample(SampleType, uv + texelSize * float2(0, 0));
+	float4 e32 = normalMap.Sample(SampleType, uv + texelSize * float2(0, 1));
+	float4 e13 = normalMap.Sample(SampleType, uv + texelSize * float2(1, -1));
+	float4 e23 = normalMap.Sample(SampleType, uv + texelSize * float2(1, 0));
+	float4 e33 = normalMap.Sample(SampleType, uv + texelSize * float2(1, 1));
+
+	/*
+	e11 e12 e13
+	e21 e22 e23
+	e31 e32 e33
+	*/
+
+	float4 normal_dx = e13 - e11 + 2*e23 - 2*e21 + e33 - e31;
+	float4 normal_dy = e31 - e11 + 2*e32 - 2*e12 + e33 - e13;
+	float magnitude_dx = length(normal_dx.xyz);
+	float magnitude_dy = length(normal_dy.xyz);
+	float magnitude = magnitude_dx + magnitude_dy;
+	magnitude = step(2, magnitude);
+	// return magnitude;
+
+	float4 diffuse = CalculateCartoonDiffuse(lightDirection, normal.xyz);
+	float4 ambient = float4(0.2, 0.2, 0.2, 1);
+	// float4 specular = CalculatePhongSpecular(cameraLocation, position.xyz, normal.xyz, lightDirection, 50);
+	float4 specular = CalculateBlinnPhongSpecular(cameraLocation, position.xyz, normal.xyz, lightDirection, 50);
+
+	// return 1 - depth;
+	// return normal;
+	// return albedo;
+	// return position;
+	return albedo * (ambient + diffuse) + specular;
+}
+
+float SmoothStep(float x)
+{
+	return 3 * pow(x, 2) - 2 * pow(x, 3);
+}
+
+float CustomStep(float y, float x, float defaultValue)
+{
+	if (y < x) return 1;
+	else return defaultValue;
+}
+
+float4 CalculateDiffuse(float3 _lightDirection, float3 _normal)
+{
+	float lightIntensity = saturate(dot(-_lightDirection, _normal));
+	return lightIntensity;
+}
+
+float4 CalculateCartoonDiffuse(float3 _lightDirection, float3 _normal)
+{
+	// 카툰 렌더링 명암 계산용
+	float4 gradientMap;
+	float4 startColor = float4(0, 0, 0, 1);
+	float4 endColor = float4(1, 1, 1, 1);
+	float lightIntensity = saturate(dot(-_lightDirection, _normal));
+
+	gradientMap = step(0.1, lightIntensity);
+	gradientMap = (1 - gradientMap) * startColor + gradientMap * endColor;
+
+	return gradientMap;
+}
+
+float4 CalculatePointLightDiffuse(float3 _lightPosition, float3 _inputPosition, float3 _inputNormal, float3 _attenuationFactors)
+{
+	float3 lightDirection = _lightPosition - _inputPosition;
+	float lightIntensity = saturate(dot(normalize(lightDirection), _inputNormal));
+	float dist = length(lightDirection);
+
+	return lightIntensity / dot(_attenuationFactors, float3(1, dist, pow(dist,2)));	
+}
+
+float CalculatePhongSpecular(float3 _cameraLocation, float3 _inputPosition, float3 _inputNormal, float3 _lightDirection, float _specularShininess)
+{
+	float3 viewDirection;
+	float3 reflectionLight;
+	// roughness ~ sqrt(2 / shininess)
+	// shininess = 50 은 roughness 0.2 정도임
+	float specular;
+	float4 specularColor = float4(1, 1, 1, 1);
+	float lightIntensity = saturate(dot(-_lightDirection, _inputNormal));
+
+	viewDirection = normalize(_cameraLocation - _inputPosition);
+	reflectionLight = normalize(2 * dot(-_lightDirection, _inputNormal) * _inputNormal + _lightDirection);
+
+	if (lightIntensity <= 0) 
+		// 애초에 반사가 안되는 상황
+		specular = 0;
+	else
+		// dot 값 saturate 해야 음수값이 0으로 처리됨
+		// 음수값을 0으로 치환해버리므로 특정 부분에서 부자연스럽게 변화
+		specular = pow(max(dot(viewDirection, reflectionLight), 0), _specularShininess);
+
+	return specular;
+}
+
+float CalculateBlinnPhongSpecular(float3 _cameraLocation, float3 _inputPosition, float3 _inputNormal, float3 _lightDirection, float _specularShininess)
+{
+	float3 viewDirection = normalize(_cameraLocation - _inputPosition);
+	float3 reflectionLight = normalize(2 * dot(-_lightDirection, _inputNormal) * _inputNormal + _lightDirection);
+	float3 halfVector = normalize(-_lightDirection + viewDirection);
+	float specular;
+	float lightIntensity = saturate(dot(-_lightDirection, _inputNormal));
+
+	if (lightIntensity <= 0)
+		specular = 0;
+	else
+		// Phong specular 와 달리 음수가 되는 경우 없이 전부 반영
+		specular = pow(saturate(dot(halfVector, _inputNormal)), _specularShininess);
+	return specular; 
+}
+
+float CalculatePointLightBlinnPhongSpecular(float3 _cameraLocation, float3 _inputPosition, float3 _inputNormal, float3 _lightPosition, float3 _attenuationFactors, float _specularShininess)
+{
+	float3 _lightDirection = _lightPosition - _inputPosition;
+	float dist = length(_lightDirection);
+	_lightDirection = normalize(_lightDirection);
+	float3 viewDirection = normalize(_cameraLocation - _inputPosition);
+	float3 reflectionLight = normalize(2 * dot(-_lightDirection, _inputNormal) * _inputNormal + _lightDirection);
+	float3 halfVector = normalize(-_lightDirection + viewDirection);
+	float specular;
+	float lightIntensity = saturate(dot(-_lightDirection, _inputNormal));
+
+	if (lightIntensity <= 0)
+		specular = 0;
+	else
+		// Phong specular 와 달리 음수가 되는 경우 없이 전부 반영
+		specular = pow(saturate(dot(halfVector, _inputNormal)), _specularShininess);
+	specular /= (dot(_attenuationFactors, float3(1, dist, pow(dist,2))));
+	return specular; 
 }

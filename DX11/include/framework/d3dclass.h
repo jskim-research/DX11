@@ -51,6 +51,7 @@ public:
     ID3D11ShaderResourceView** GetDepthStencilSRV();
     ID3D11ShaderResourceView** GetAlbedoSRV();
     ID3D11ShaderResourceView** GetNormalSRV();
+    ID3D11ShaderResourceView** GetPositionSRV();
 
     void UnbindDepthStencilView();
     /*
@@ -90,6 +91,13 @@ private:
     ID3D11Texture2D* m_normalTexture;
     ID3D11RenderTargetView* m_normalRTV;
     ID3D11ShaderResourceView* m_normalSRV;
+
+    /*
+    *   Position Texture => RTV, SRV
+    */
+    ID3D11Texture2D* m_positionTexture;
+    ID3D11RenderTargetView* m_positionRTV;
+    ID3D11ShaderResourceView* m_positionSRV;
 
     ID3D11RasterizerState* m_rasterState;
     ID3D11RasterizerState* m_outlineRasterState;

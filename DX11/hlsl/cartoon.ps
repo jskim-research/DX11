@@ -153,6 +153,7 @@ struct PSMainOutType
 {
 	float4 albedo : SV_TARGET0;
 	float4 normal : SV_TARGET1;
+	float4 position : SV_TARGET2;
 };
 
 PSMainOutType PSMain(PixelInputType input)
@@ -170,7 +171,12 @@ PSMainOutType PSMain(PixelInputType input)
 	output.normal = float4(input.normal, 1);
 	
 	if (isOutline && dot(normalize(input.worldPosition - cameraLocation), input.normal) >= 0)
+	{
+		// GBuffer Combine 시 Diffuse 영향 받지 않도록 함
+		// 다만, 여전히 다른 lighting 효과에 영향 받을 수 있어 추후 수정 필요
+		output.normal = float4(0, 0, -1, 1);
 		return output;
+	}
 	else if (isOutline)
 		discard;
 	
@@ -199,7 +205,8 @@ PSMainOutType PSMain(PixelInputType input)
 
 	color = textureColor * (ambient + diffuse); // + specularColor * specular;
 	
-	output.albedo = color;
+	output.albedo = textureColor;
 	output.normal = float4(input.normal, 1);
+	output.position = float4(input.worldPosition, 1);
 	return output;
 }

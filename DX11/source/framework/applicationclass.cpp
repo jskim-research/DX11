@@ -368,9 +368,12 @@ bool ApplicationClass::Render(float rotation)
 	// Clear the render target view & depth stencil view to begin the scene.
 	m_Direct3D->BeginScene(0.5f, 0.5f, 0.0f, 1.0f);  // yellow background
 
-	/*
-	*	World, View, Projection Matrix 계산
-	*/
+	/************************************************/
+	/*                 Drawing Mesh                 */
+	/************************************************/
+	
+	// m_CartoonShader draws on GBuffer (albedo, normal, depth)
+
 	m_Camera->Render();
 	m_Direct3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
@@ -452,10 +455,39 @@ bool ApplicationClass::Render(float rotation)
 		return false;
 	}
 
+	scaleMatrix = XMMatrixScaling(scale, scale, scale);
+	rotateMatrix = XMMatrixRotationY(0.0174532925f * 160);
+	translateMatrix = XMMatrixTranslation(-1, 0, -13);
+	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
+
+	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
+	m_CartoonShaderInput->worldMatrix = worldMatrix;
+	m_CartoonShaderInput->viewMatrix = viewMatrix;
+	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
+	m_CartoonShaderInput->gltfTextureArrayView = m_Cube->GetGltfTextures();
+	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
+	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
+	m_CartoonShaderInput->pointLights = m_PointLights;
+	m_CartoonShaderInput->pointLightsNum = 0;
+	m_CartoonShaderInput->isOutline = false;
+	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
+
+	m_Cube->Render(m_Direct3D->GetDeviceContext());
+	result = m_CartoonShader->Render(m_CartoonShaderInput, m_Cube->GetIndexCount());
+	if (!result)
+	{
+		return false;
+	}
+
+	/***************************************************/
+	/*                 GBuffer Combine                 */
+	/***************************************************/
+
 	/*
 	*	G-Buffer 모두 합쳐서 그리는 Shader
 	*	참고로 모든 pixel 에 overwrite 하기 때문에 이전에 그린 것들 전부 사라진다.
 	*/
+
 	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
 	m_CartoonShaderInput->worldMatrix = worldMatrix;
 	m_CartoonShaderInput->viewMatrix = viewMatrix;
@@ -474,54 +506,11 @@ bool ApplicationClass::Render(float rotation)
 		return false;
 	}
 
+	/*******************************************/
+	/*                 Draw UI                 */
+	/*******************************************/
+
 	/*
-	*	NormalDepthShader 렌더링 테스트
-	*	Depth Image 나옴
-	*/
-
-	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	translateMatrix = XMMatrixTranslation(2, -1, -5);
-	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
-
-	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
-	m_CartoonShaderInput->worldMatrix = worldMatrix;
-	m_CartoonShaderInput->viewMatrix = viewMatrix;
-	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	m_CartoonShaderInput->gltfTextureArrayView = m_Model->GetGltfTextures();
-	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
-	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
-	m_CartoonShaderInput->pointLights = m_PointLights;
-	m_CartoonShaderInput->pointLightsNum = 0;
-	m_CartoonShaderInput->isOutline = false;
-	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
-
-	m_Model->Render(m_Direct3D->GetDeviceContext());
-	result = m_NormalDepthShader->Render(m_CartoonShaderInput, m_Model->GetIndexCount());
-	if (!result)
-		return false;
-
-	scaleMatrix = XMMatrixScaling(scale, scale, scale);
-	translateMatrix = XMMatrixTranslation(-1, 0, -13);
-	worldMatrix = XMMatrixMultiply(scaleMatrix, XMMatrixMultiply(rotateMatrix, translateMatrix));
-
-	m_CartoonShaderInput->deviceContext = m_Direct3D->GetDeviceContext();
-	m_CartoonShaderInput->worldMatrix = worldMatrix;
-	m_CartoonShaderInput->viewMatrix = viewMatrix;
-	m_CartoonShaderInput->projectionMatrix = projectionMatrix;
-	m_CartoonShaderInput->gltfTextureArrayView = m_Cube->GetGltfTextures();
-	m_CartoonShaderInput->cameraLocation = m_Camera->GetPosition();
-	m_CartoonShaderInput->directionalLight = m_DirectionalLight;
-	m_CartoonShaderInput->pointLights = m_PointLights;
-	m_CartoonShaderInput->pointLightsNum = 0;
-	m_CartoonShaderInput->isOutline = false;
-	m_Direct3D->SetRasterizerFrontCounterClockwise(false);
-
-	m_Cube->Render(m_Direct3D->GetDeviceContext());
-	result = m_NormalDepthShader->Render(m_CartoonShaderInput, m_Cube->GetIndexCount());
-	if (!result)
-		return false;
-	
-
 	// Bitmap 렌더링
 	// 1280 x 720
 	m_Bitmap->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 150, 360 - 150);
@@ -571,7 +560,7 @@ bool ApplicationClass::Render(float rotation)
 	}
 
 	m_Direct3D->SetZBufferOnOff(true);
-
+	*/
 	
 	// Present the rendered scene to the screen.
 	m_Direct3D->EndScene();

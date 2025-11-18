@@ -32,6 +32,9 @@ public:
 	virtual void Initialize(class D3DClass* direct3D);
 
 	void Shutdown();
+	/*
+	*	Set Vertex Buffer & Index Buffer & PrimitiveTopology using model data
+	*/
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();

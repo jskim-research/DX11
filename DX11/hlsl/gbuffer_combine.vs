@@ -20,8 +20,6 @@ struct PixelInputType
 	float2 tex : TEXCOORD;
 };
 
-
-
 PixelInputType VSMain(VertexInputType input)
 {
 	PixelInputType output;
