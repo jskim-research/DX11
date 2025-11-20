@@ -30,8 +30,7 @@ void ModelClass::Initialize(D3DClass* direct3D)
 
 void ModelClass::Shutdown()
 {
-	ReleaseTexture();
-	ShutdownBuffers();
+	ShutdownModel();
 }
 
 void ModelClass::Render(ID3D11DeviceContext* deviceContext)
@@ -235,6 +234,12 @@ bool ModelClass::ImportFromCustomFile(ID3D11Device* device, ID3D11DeviceContext*
 	}
 
 	return true;
+}
+
+void ModelClass::ShutdownModel()
+{
+	ReleaseTexture();
+	ShutdownBuffers();
 }
 
 void ModelClass::ShutdownBuffers()

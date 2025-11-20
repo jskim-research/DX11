@@ -72,3 +72,13 @@ bool BitmapClass::UpdateRenderPosition(ID3D11DeviceContext* deviceContext, int r
 
 	return true;
 }
+
+void BitmapClass::SetWidth(int width)
+{
+	m_bitmapWidth = width;
+}
+
+void BitmapClass::SetHeight(int height)
+{
+	m_bitmapHeight = height;
+}

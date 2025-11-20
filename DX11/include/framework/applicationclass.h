@@ -26,6 +26,8 @@
 #include "model/spriteclass.h"
 #include "shader/normaldepthshaderclass.h"
 #include "shader/gbuffershaderclass.h"
+#include "font/fontclass.h"
+#include "model/textclass.h"
 
 
 /////////////
@@ -79,4 +81,7 @@ private:
 	SpriteClass* m_Sprite;
 	NormalDepthShaderClass* m_NormalDepthShader;
 	GBufferShaderClass* m_GBufferShader;
+	FontClass* m_Font;
+	TextClass* m_TextTest;
+	TextClass* m_TextTest2;
 };

@@ -3,9 +3,9 @@
 #include "modelclass.h"
 
 /*
-*	left, bottom => (-, -)
-*	right, top => (+, +)
-*	원점 => (0, 0)
+*	left, bottom => (- screen width / 2, - screen height / 2)
+*	right, top => (screen width / 2, screen height / 2)
+*	(0, 0) => 화면 중앙
 */
 class BitmapClass : public ModelClass
 {
@@ -15,9 +15,12 @@ public:
 
 	virtual void Initialize(D3DClass* direct3D) override;
 
-	bool UpdateRenderPosition(ID3D11DeviceContext* deviceContext, int renderPositionX, int renderPositionY);
+	virtual bool UpdateRenderPosition(ID3D11DeviceContext* deviceContext, int renderPositionX, int renderPositionY);
 
-private:
+	void SetWidth(int width);
+	void SetHeight(int height);
+
+protected:
 	int m_renderPositionX;
 	int m_renderPositionY;
 	int m_prevRenderPositionX;

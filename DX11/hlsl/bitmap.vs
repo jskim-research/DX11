@@ -20,6 +20,7 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 tex : TEXCOORD;
+	float4 color : COLOR;
 	nointerpolation uint imageIndex : TEXCOORD1;
 };
 
@@ -34,6 +35,7 @@ PixelInputType VSMain(VertexInputType input)
 	output.normal = input.normal;
 	output.tex = input.tex;
 	output.imageIndex = input.imageIndex;
+	output.color = input.color;
 
 	return output;
 }

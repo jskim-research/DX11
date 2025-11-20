@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\camera\cameraclass.h" />
+    <ClInclude Include="include\font\fontclass.h" />
     <ClInclude Include="include\framework\applicationclass.h" />
     <ClInclude Include="include\framework\d3dclass.h" />
     <ClInclude Include="include\framework\inputclass.h" />
@@ -140,6 +141,7 @@
     <ClInclude Include="include\model\bitmapclass.h" />
     <ClInclude Include="include\model\modelclass.h" />
     <ClInclude Include="include\model\spriteclass.h" />
+    <ClInclude Include="include\model\textclass.h" />
     <ClInclude Include="include\shader\baseshaderclass.h" />
     <ClInclude Include="include\shader\baseshaderinput.h" />
     <ClInclude Include="include\shader\bitmapshaderclass.h" />
@@ -170,6 +172,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="source\camera\cameraclass.cpp" />
+    <ClCompile Include="source\font\fontclass.cpp" />
     <ClCompile Include="source\framework\applicationclass.cpp" />
     <ClCompile Include="source\framework\d3dclass.cpp" />
     <ClCompile Include="source\framework\inputclass.cpp" />
@@ -179,6 +182,7 @@
     <ClCompile Include="source\model\bitmapclass.cpp" />
     <ClCompile Include="source\model\modelclass.cpp" />
     <ClCompile Include="source\model\spriteclass.cpp" />
+    <ClCompile Include="source\model\textclass.cpp" />
     <ClCompile Include="source\shader\baseshaderclass.cpp" />
     <ClCompile Include="source\shader\bitmapshaderclass.cpp" />
     <ClCompile Include="source\shader\cartoonshaderclass.cpp" />

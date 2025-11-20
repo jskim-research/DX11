@@ -114,6 +114,7 @@ bool BaseShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 	samplerDesc.BorderColor[3] = 0;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	// samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
 	samplerDesc.MaxAnisotropy = 1;
 	samplerDesc.MipLODBias = 0;
 	samplerDesc.MinLOD = 0;

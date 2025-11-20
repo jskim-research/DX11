@@ -123,6 +123,12 @@
     <ClInclude Include="include\shader\gbuffershaderclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="include\font\fontclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="include\model\textclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -186,6 +192,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="source\shader\gbuffershaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="source\font\fontclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="source\model\textclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

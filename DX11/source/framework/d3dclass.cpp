@@ -13,6 +13,8 @@ D3DClass::D3DClass()
 	m_screenWidth = 0;
 	m_screenHeight = 0;
 	m_depthStencilStateNotUsingZBuffer = 0;
+	m_alphaEnableBlendingState = nullptr;
+	m_alphaDisableBlendingState = nullptr;
 }
 
 D3DClass::D3DClass(const D3DClass& other)
@@ -45,6 +47,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_RASTERIZER_DESC rasterDesc;
 	D3D11_RASTERIZER_DESC outlineRasterDesc;
 	float fieldOfView, screenAspect;
+	D3D11_BLEND_DESC blendStateDesc;
 
 	// 마우스를 현재 윈도우 클라이언트 영역 안으로 제한
 	RECT rect;
@@ -340,6 +343,28 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	}
 
 	/*
+	*	Alpha Blending State
+	*/
+	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+
+	// BlendOp(Src_Alpha * Src_Color, Dest_Alpha * Dest_Color)
+
+	blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;  // Dest 값은 무시한다, Blend 대상만 고려?
+	blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	result = m_device->CreateBlendState(&blendStateDesc, &m_alphaEnableBlendingState);
+	if (FAILED(result)) return false;
+
+	blendStateDesc.RenderTarget[0].BlendEnable = FALSE;
+	result = m_device->CreateBlendState(&blendStateDesc, &m_alphaDisableBlendingState);
+	if (FAILED(result)) return false;
+
+	/*
 	*	G-Buffer 구성
 	*	Albedo, Normal, ...
 	*/
@@ -483,11 +508,24 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 void D3DClass::Shutdown()
 {
+	if (m_alphaEnableBlendingState)
+	{
+		m_alphaEnableBlendingState->Release();
+		m_alphaEnableBlendingState = 0;
+	}
+
+	if (m_alphaDisableBlendingState)
+	{
+		m_alphaDisableBlendingState->Release();
+		m_alphaDisableBlendingState = 0;
+	}
+	
 	if (m_depthStencilStateNotUsingZBuffer)
 	{
 		m_depthStencilStateNotUsingZBuffer->Release();
 		m_depthStencilStateNotUsingZBuffer = 0;
 	}
+
 	// Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
 	if (m_swapChain)
 	{
@@ -659,6 +697,30 @@ void D3DClass::SetZBufferOnOff(bool isZBufferOn)
 	{
 		m_deviceContext->OMSetDepthStencilState(m_depthStencilStateNotUsingZBuffer, 1);
 	}
+}
+
+void D3DClass::EnableAlphaBlending()
+{
+	float blendFactor[4];
+
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	m_deviceContext->OMSetBlendState(m_alphaEnableBlendingState, blendFactor, 0xffffffff);
+}
+
+void D3DClass::DisableAlphaBlending()
+{
+	float blendFactor[4];
+
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	m_deviceContext->OMSetBlendState(m_alphaDisableBlendingState, blendFactor, 0xffffffff);
 }
 
 ID3D11ShaderResourceView** D3DClass::GetDepthStencilSRV()

@@ -42,6 +42,9 @@ public:
     void SetRasterizerFrontCounterClockwise(bool isFrontCounterClockwise);
     void SetZBufferOnOff(bool isZBufferOn);
 
+    void EnableAlphaBlending();
+    void DisableAlphaBlending();
+
     inline int GetScreenWidth() const { return m_screenWidth; }
     inline int GetScreenHeight() const { return m_screenHeight; }
 
@@ -106,6 +109,10 @@ private:
     XMMATRIX m_orthoMatrix;
     D3D11_VIEWPORT m_viewport;
     ID3D11DepthStencilState* m_depthStencilStateNotUsingZBuffer;
+
+    ID3D11BlendState* m_alphaEnableBlendingState;
+    ID3D11BlendState* m_alphaDisableBlendingState;
+
 };
 
 
