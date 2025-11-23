@@ -107,7 +107,7 @@ void GBufferShaderClass::ShutdownShader()
 	}
 }
 
-void GBufferShaderClass::RenderShader(BaseShaderInput* input, int indexCount)
+void GBufferShaderClass::RenderShader(BaseShaderInput* input, size_t indexCount, size_t instanceNum)
 {
 	// depth SRV 사용을 위해서 RTV 에서 unbind 해줘야함
 	input->d3dclass->UnbindDepthStencilView();
@@ -115,5 +115,5 @@ void GBufferShaderClass::RenderShader(BaseShaderInput* input, int indexCount)
 	input->deviceContext->PSSetShaderResources(1, 1, input->d3dclass->GetNormalSRV());
 	input->deviceContext->PSSetShaderResources(2, 1, input->d3dclass->GetPositionSRV());
 	input->deviceContext->PSSetShaderResources(3, 1, input->d3dclass->GetDepthStencilSRV());
-	BaseShaderClass::RenderShader(input, indexCount);
+	BaseShaderClass::RenderShader(input, indexCount, instanceNum);
 }

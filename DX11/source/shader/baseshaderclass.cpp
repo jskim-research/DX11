@@ -40,7 +40,7 @@ bool BaseShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 	return true;
 }
 
-bool BaseShaderClass::Render(BaseShaderInput* input, int indexCount)
+bool BaseShaderClass::Render(BaseShaderInput* input, size_t indexCount, size_t instanceNum)
 {
 	bool result;
 
@@ -48,7 +48,7 @@ bool BaseShaderClass::Render(BaseShaderInput* input, int indexCount)
 	if (!result)
 		return false;
 
-	RenderShader(input, indexCount);
+	RenderShader(input, indexCount, instanceNum);
 	
 	return true;
 }
@@ -228,7 +228,7 @@ void BaseShaderClass::ShutdownShader()
 	}
 }
 
-void BaseShaderClass::RenderShader(BaseShaderInput* input, int indexCount)
+void BaseShaderClass::RenderShader(BaseShaderInput* input, size_t indexCount, size_t instanceNum)
 {
 	input->deviceContext->IASetInputLayout(m_layout);
 	input->deviceContext->VSSetShader(m_vertexShader, nullptr, 0);

@@ -36,7 +36,7 @@ public:
 	*	공통 인터페이스로 자식 클래스에서 따로 override 하지 않음
 	*/
 	bool Initialize(ID3D11Device* device, HWND hwnd);
-	bool Render(BaseShaderInput* input, int indexCount);
+	bool Render(BaseShaderInput* input, size_t indexCount, size_t instanceNum = 1);
 	void Shutdown();
 
 protected:
@@ -46,10 +46,9 @@ protected:
 	virtual bool SetShaderParameters(BaseShaderInput* input);
 	virtual void ShutdownShader();
 
-	virtual void RenderShader(BaseShaderInput* input, int indexCount);
+	virtual void RenderShader(BaseShaderInput* input, size_t indexCount, size_t instanceNum);
 	void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
-private:
 	ID3D11VertexShader* m_vertexShader;
 	ID3D11PixelShader* m_pixelShader;
 	ID3D11InputLayout* m_layout;

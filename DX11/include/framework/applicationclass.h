@@ -28,6 +28,7 @@
 #include "shader/gbuffershaderclass.h"
 #include "font/fontclass.h"
 #include "model/textclass.h"
+#include "shader/textshaderclass.h"
 
 
 /////////////
@@ -84,4 +85,5 @@ private:
 	FontClass* m_Font;
 	TextClass* m_TextTest;
 	TextClass* m_TextTest2;
+	TextShaderClass* m_TextShader;
 };

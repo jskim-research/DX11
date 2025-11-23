@@ -2,8 +2,9 @@
 #include "framework/d3dclass.h"
 
 BitmapClass::BitmapClass() :
-	m_renderPositionX(0),
-	m_renderPositionY(0),
+	// 초기화 안된 상태의 renderPosition 와 prevRenderPosition 를 각기 다른 값으로 할당하여 차이를 둠
+	m_renderPositionX(-2),
+	m_renderPositionY(-2),
 	m_prevRenderPositionX(-1),
 	m_prevRenderPositionY(-1),
 	m_bitmapWidth(200),

@@ -12,62 +12,132 @@ TextClass::~TextClass()
 
 bool TextClass::BuildBuffer(ID3D11Device* device, ID3D11DeviceContext* deviceContext, const char* str, FontClass& font, XMFLOAT4 color)
 {
+	// Quad 하나만 있는 Vertex Buffer, Index Buffer
+	// Size, Offset 등을 담는 Vertex Buffer, Index Buffer (Instance Data)
 	bool result = false;
-	size_t length = strlen(str);
-	ObjectParser::CommonVertexType* vertices = nullptr;
-	unsigned long* indices = nullptr;
+	ObjectParser::TextVertexInstanceType* instance_vertices = nullptr;
+	ObjectParser::CommonVertexType* quad_vertices = nullptr;
+	unsigned long* quad_indices = nullptr;
 
-	m_vertexCount = length * 6;
-	m_indexCount = m_vertexCount;
+	// Instance Num = Strign Length
+	m_StrLength = strlen(str);
 
-	vertices = new ObjectParser::CommonVertexType[m_vertexCount];
-	indices = new unsigned long[m_indexCount];
+	// 실제론 Quad 하나만 가지고 있음 (GPU Instancing 으로 GPU 한테 Quad 하나를 여러번 그리도록 명령할 것임)
+	m_vertexCount = 4;
+	m_indexCount = 6;
+
+	instance_vertices = new ObjectParser::TextVertexInstanceType[m_StrLength];
+
+	quad_vertices = new ObjectParser::CommonVertexType[4];
+	quad_indices = new unsigned long[6];
+
+	/*
+	*	스크린의 중앙 원점 (0, 0) 을 LB 로 하는 하나의 Quad 구성 
+	*/
+	quad_vertices[0].position = XMFLOAT3(0, 1, 1);  // LT
+	quad_vertices[1].position = XMFLOAT3(1, 1, 1);  // RT
+	quad_vertices[2].position = XMFLOAT3(0, 0, 1);  // LB
+	quad_vertices[3].position = XMFLOAT3(1, 0, 1);  // RB
+
+	for (int i = 0; i < 4; i++)
+	{
+		quad_vertices[i].imageIndex = 0;
+		quad_vertices[i].normal = XMFLOAT3(0, 0, -1);
+		quad_vertices[i].color = color;
+	}
+
+	quad_indices[0] = 0;
+	quad_indices[1] = 1;
+	quad_indices[2] = 2;
+	quad_indices[3] = 2;
+	quad_indices[4] = 1;
+	quad_indices[5] = 3;
 
 	if (m_Str != nullptr) delete[] m_Str;
-	m_Str = new char[length];
-	m_StrLength = length;
+	m_Str = new char[m_StrLength];
 
 	m_Font = &font;
 	m_textureArrayView = font.GetTexture();
 
-	for (int i = 0; i < length; i++)
+	// Instance = Quad = length
+	for (int i = 0; i < m_StrLength; i++)
 	{
 		CharType ct;
 		m_Str[i] = str[i];
 		result = font.GetCharData(m_Str[i], &ct);
 		if (!result) return false;
 
-		// Char 하나당 vertex 6개 (2개의 triangle)
-		// UpdateRenderPosition 함수 내에서 처리하는 순서랑 맞추기
-		// triangle 1 : lt -> rt -> lb
-		// triangle 2 : lb -> rt -> rb
-		vertices[i * 6 + 0].texture = XMFLOAT2(ct.u1, 0);
-		vertices[i * 6 + 1].texture = XMFLOAT2(ct.u2, 0);
-		vertices[i * 6 + 2].texture = XMFLOAT2(ct.u1, 0.5);
-		vertices[i * 6 + 3].texture = XMFLOAT2(ct.u1, 0.5);
-		vertices[i * 6 + 4].texture = XMFLOAT2(ct.u2, 0);
-		vertices[i * 6 + 5].texture = XMFLOAT2(ct.u2, 0.5);
-
-		for (int j = 0; j < 6; j++)
-		{
-			// 밑처럼 기본값 넣어놔야 culling 안 당함
-			vertices[i * 6 + j].position = XMFLOAT3(0, 0, 1);
-			vertices[i * 6 + j].normal = XMFLOAT3(0, 0, -1);
-			vertices[i * 6 + j].color = color;
-
-			// index 는 vertex index 랑 같음
-			indices[i * 6 + j] = i * 6 + j;
-		}
+		// Quad uvRect = (left, top, right, bottom)
+		instance_vertices[i].uvRect = XMFLOAT4(ct.u1, 0, ct.u2, 0.5);
+		instance_vertices[i].offset = XMFLOAT2(0, 0);
+		instance_vertices[i].size = XMFLOAT2(0, 0);
 	}
 
-	result = MakeVertexBuffer(device, vertices);
-	if (!result) return false;
+	HRESULT hresult;
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	D3D11_SUBRESOURCE_DATA vertexData;
+	D3D11_BUFFER_DESC indexBufferDesc;
+	D3D11_SUBRESOURCE_DATA indexData;
 
-	result = MakeIndexBuffer(device, indices);
-	if (!result) return false;
+	// Quad Buffer 만들기 (CPU 에서 수정안한다는 것이 차이점)
 
-	if (vertices) delete[] vertices;
-	if (indices) delete[] indices;
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::CommonVertexType) * 4;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = 0;
+
+	vertexData.pSysMem = quad_vertices;
+	vertexData.SysMemPitch = 0;
+	vertexData.SysMemSlicePitch = 0;
+
+	hresult = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_QuadVertexBuffer);
+	if (FAILED(hresult))
+	{
+		return false;
+	}
+
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * 6;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+
+	indexData.pSysMem = quad_indices;
+	indexData.SysMemPitch = 0;
+	indexData.SysMemSlicePitch = 0;
+
+	hresult = device->CreateBuffer(&indexBufferDesc, &indexData, &m_QuadIndexBuffer);
+	if (FAILED(hresult))
+	{
+		return false;
+	}
+
+	// Instance Buffer 만들기
+
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexBufferDesc.ByteWidth = sizeof(ObjectParser::TextVertexInstanceType) * m_StrLength;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = 0;
+
+	vertexData.pSysMem = instance_vertices;
+	vertexData.SysMemPitch = 0;
+	vertexData.SysMemSlicePitch = 0;
+
+	hresult = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_InstanceVertexBuffer);
+	if (FAILED(hresult))
+	{
+		return false;
+	}
+
+	if (instance_vertices) delete[] instance_vertices;
+
+	if (quad_vertices) delete[] quad_vertices;
+	if (quad_indices) delete[] quad_indices;
 
 	return true;
 }
@@ -87,56 +157,41 @@ bool TextClass::UpdateRenderPosition(ID3D11DeviceContext* deviceContext, int ren
 	m_renderPositionY = renderPositionY;
 
 	// 새로운 render position 에 따라 vertex buffer, index buffer 갱신
-	ObjectParser::CommonVertexType* vertices = 0;
+	// CPU 에선 instance 별 offset, size 정도만 갱신하고 나머지 계산은 GPU 에 맡기는 형태
+	ObjectParser::TextVertexInstanceType* vertices = 0;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	HRESULT result;
 
-	result = deviceContext->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	result = deviceContext->Map(m_InstanceVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(result))
 	{
 		return false;
 	}
 
-	vertices = (ObjectParser::CommonVertexType*)mappedResource.pData;
+	vertices = (ObjectParser::TextVertexInstanceType*)mappedResource.pData;
+	int deltaX = 0;
 
-	int left = m_renderPositionX;
-	int right = m_renderPositionX;
-	int top = m_renderPositionY;
-	int bottom = m_renderPositionY;
-
-	int length = m_vertexCount / 6;
-
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < m_StrLength; i++)
 	{
 		CharType ct;
 		m_Font->GetCharData(m_Str[i], &ct);
 
 		if (ct.size == 0)
 		{
-			// 스페이스 바
-			right += m_bitmapHeight/2;
+			// 스페이스바
+			deltaX += (m_bitmapWidth / 2) * 5 / 10;
 		}
 		else
 		{
-			// 왼쪽 위 기준 출력
-			int width = (m_bitmapWidth / 2) * ct.size / 10;
-			int height = (m_bitmapHeight / 2);
+			vertices[i].offset = XMFLOAT2(m_renderPositionX + deltaX, m_renderPositionY);
+			vertices[i].size = XMFLOAT2((m_bitmapWidth / 2) * ct.size / 10, (m_bitmapHeight / 2));
 
-			right += width;
-			bottom = m_renderPositionY - height;
-
-			vertices[i * 6 + 0].position = XMFLOAT3(left, top, vertices[i * 6 + 0].position.z);
-			vertices[i * 6 + 1].position = XMFLOAT3(right, top, vertices[i * 6 + 1].position.z);
-			vertices[i * 6 + 2].position = XMFLOAT3(left, bottom, vertices[i * 6 + 2].position.z);
-			vertices[i * 6 + 3].position = XMFLOAT3(left, bottom, vertices[i * 6 + 3].position.z);
-			vertices[i * 6 + 4].position = XMFLOAT3(right, top, vertices[i * 6 + 4].position.z);
-			vertices[i * 6 + 5].position = XMFLOAT3(right, bottom, vertices[i * 6 + 5].position.z);
+			// x 축 이동만 고려
+			deltaX += (m_bitmapWidth / 2) * ct.size / 10;
 		}
-
-		left = right;
 	}
 
-	deviceContext->Unmap(m_vertexBuffer, 0);
+	deviceContext->Unmap(m_InstanceVertexBuffer, 0);
 
 	return true;
 }
@@ -150,4 +205,18 @@ void TextClass::ShutdownModel()
 		delete[] m_Str;
 		m_Str = nullptr;
 	}
+}
+
+void TextClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
+{
+	ID3D11Buffer* vertexBuffers[2] = { m_QuadVertexBuffer, m_InstanceVertexBuffer };
+	UINT strides[2] = { sizeof(ObjectParser::CommonVertexType), sizeof(ObjectParser::TextVertexInstanceType) };
+	UINT offsets[2] = { 0, 0 };
+
+
+	// 하튼 다 GPU 한테 명령하는거임
+	deviceContext->IASetVertexBuffers(0, 2, vertexBuffers, strides, offsets);
+	deviceContext->IASetIndexBuffer(m_QuadIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	// 이 vertex buffer 로부터 render 될 primitive 형태 = triangle 임을 GPU 에게 알림
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

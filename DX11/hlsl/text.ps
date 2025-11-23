@@ -1,0 +1,27 @@
+Texture2DArray textures : register(t0);
+SamplerState SampleType : register(s0);
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
+	float2 tex : TEXCOORD;
+	float4 color : COLOR;
+	nointerpolation uint imageIndex : TEXCOORD1;
+};
+
+float4 PSMain(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+	textureColor = textures.Sample(SampleType, float3(input.tex, input.imageIndex));
+
+	// return 1;
+	// return float4(input.tex, 0, 1);
+	// return textureColor * input.color;
+
+	// alpha blending 이 켜져있을 때 적용
+	// 현재는 r == 0 일 때 글자 이미지 배경색 가정
+	if (textureColor.r == 0) textureColor.a = 0;
+	
+	return textureColor * input.color;
+}

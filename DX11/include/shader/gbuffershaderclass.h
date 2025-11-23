@@ -24,7 +24,7 @@ private:
 	virtual bool InitializeShader(ID3D11Device*, HWND, WCHAR*, WCHAR*) override;
 	virtual bool SetShaderParameters(BaseShaderInput*) override;
 	virtual void ShutdownShader() override;
-	virtual void RenderShader(BaseShaderInput* input, int indexCount) override;
+	virtual void RenderShader(BaseShaderInput* input, size_t indexCount, size_t instanceNum) override;
 
 private:
 	ID3D11Buffer* m_lightBuffer;

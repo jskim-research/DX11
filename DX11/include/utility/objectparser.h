@@ -24,6 +24,14 @@ public:
 		uint32_t imageIndex;
 	};
 
+	// GPU Text Instancing 용 정보
+	struct TextVertexInstanceType
+	{
+		XMFLOAT2 offset;  // render position
+		XMFLOAT2 size;
+		XMFLOAT4 uvRect;  // atlas 글자 영역
+	};
+
 public:
 	ObjectParser();
 	bool ParseCustomFile(const char* fileName, CommonVertexType** vertices, unsigned long** indices, int* vertexCount, int* indexCount);

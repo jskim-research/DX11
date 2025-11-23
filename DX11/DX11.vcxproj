@@ -152,6 +152,7 @@
     <ClInclude Include="include\shader\gbuffershaderclass.h" />
     <ClInclude Include="include\shader\lightshaderclass.h" />
     <ClInclude Include="include\shader\normaldepthshaderclass.h" />
+    <ClInclude Include="include\shader\textshaderclass.h" />
     <ClInclude Include="include\shader\textureshaderclass.h" />
     <ClInclude Include="include\texture\textureclass.h" />
     <ClInclude Include="include\utility\json.hpp" />
@@ -190,6 +191,7 @@
     <ClCompile Include="source\shader\gbuffershaderclass.cpp" />
     <ClCompile Include="source\shader\lightshader.cpp" />
     <ClCompile Include="source\shader\normaldepthshaderclass.cpp" />
+    <ClCompile Include="source\shader\textshaderclass.cpp" />
     <ClCompile Include="source\shader\textureshaderclass.cpp" />
     <ClCompile Include="source\texture\textureclass.cpp" />
     <ClCompile Include="source\utility\objectparser.cpp" />

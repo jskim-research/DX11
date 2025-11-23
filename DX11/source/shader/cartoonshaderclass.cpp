@@ -274,10 +274,10 @@ void CartoonShaderClass::ShutdownShader()
     }
 }
 
-void CartoonShaderClass::RenderShader(BaseShaderInput* input, int indexCount)
+void CartoonShaderClass::RenderShader(BaseShaderInput* input, size_t indexCount, size_t instanceNum)
 {
     input->d3dclass->BindGBuffer();
-    BaseShaderClass::RenderShader(input, indexCount);
+    BaseShaderClass::RenderShader(input, indexCount, instanceNum);
     // Old setting 기억해뒀다가 바꾸는게 나을수도
     input->d3dclass->BindStandard_RTV_SRV();
 }

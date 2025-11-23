@@ -8,5 +8,5 @@ public:
 	NormalDepthShaderClass(const wchar_t* vsFilename, const wchar_t* psFilename);
 
 private:
-	virtual void RenderShader(BaseShaderInput* input, int indexCount) override;
+	virtual void RenderShader(BaseShaderInput* input, size_t indexCount, size_t instanceNum) override;
 };

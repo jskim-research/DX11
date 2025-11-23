@@ -23,6 +23,7 @@ ApplicationClass::ApplicationClass()
 	m_Font = 0;
 	m_TextTest = 0;
 	m_TextTest2 = 0;
+	m_TextShader = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass& other)
@@ -131,6 +132,14 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	m_TextShader = new TextShaderClass(L"./hlsl/text.vs", L"./hlsl/text.ps");
+	result = m_TextShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the text shader object.", L"Error", MB_OK);
+		return false;
+	}
+
 	m_Bitmap = new BitmapClass;
 	strcpy_s(objFileName, "./data/Bitmap.txt");
 	strcpy_s(textureFilename, "./data/stone01.tga");
@@ -174,7 +183,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_TextTest = new TextClass();
 	m_TextTest->SetWidth(50);
 	m_TextTest->SetHeight(50);
-	result = m_TextTest->BuildBuffer(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "Goodbye Hello", *m_Font, XMFLOAT4(1, 0, 0, 1));
+	result = m_TextTest->BuildBuffer(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "These Texts", *m_Font, XMFLOAT4(1, 0, 0, 1));
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not import the text test.", L"Error", MB_OK);
@@ -184,7 +193,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_TextTest2 = new TextClass();
 	m_TextTest2->SetWidth(50);
 	m_TextTest2->SetHeight(50);
-	result = m_TextTest2->BuildBuffer(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "FPS", *m_Font, XMFLOAT4(0, 1, 0, 1));
+	result = m_TextTest2->BuildBuffer(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), "Using GPU Instancing", *m_Font, XMFLOAT4(0, 1, 0, 1));
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not import the text test.", L"Error", MB_OK);
@@ -216,6 +225,13 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+	if (m_TextShader)
+	{
+		m_TextShader->Shutdown();
+		delete m_TextShader;
+		m_TextShader = 0;
+	}
+
 	if (m_TextTest2)
 	{
 		m_TextTest2->Shutdown();
@@ -556,7 +572,11 @@ bool ApplicationClass::Render(float rotation)
 	/*******************************************/
 	/*                 Draw UI                 */
 	/*******************************************/
-	m_TextTest->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 50, 360 - 100);
+
+	// (0, 0) 정렬 기준
+	m_TextTest->SetWidth(100);
+	m_TextTest->SetHeight(100);
+	m_TextTest->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640, -260);
 	m_TextTest->Render(m_Direct3D->GetDeviceContext());
 	worldMatrix = XMMatrixIdentity();
 	viewMatrix = XMMatrixIdentity();
@@ -572,7 +592,7 @@ bool ApplicationClass::Render(float rotation)
 	m_Direct3D->SetZBufferOnOff(false);
 	m_Direct3D->EnableAlphaBlending();
 
-	result = m_BitmapShader->Render(m_BitmapShaderInput, m_TextTest->GetIndexCount());
+	result = m_TextShader->Render(m_BitmapShaderInput, m_TextTest->GetIndexCount(), m_TextTest->GetInstanceNum());
 	if (!result)
 	{
 		return false;
@@ -581,7 +601,9 @@ bool ApplicationClass::Render(float rotation)
 	m_Direct3D->SetZBufferOnOff(true);
 	m_Direct3D->DisableAlphaBlending();
 
-	m_TextTest2->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640 + 50, 360 - 50);
+	m_TextTest2->SetWidth(100);
+	m_TextTest2->SetHeight(100);
+	m_TextTest2->UpdateRenderPosition(m_Direct3D->GetDeviceContext(), -640, -360);
 	m_TextTest2->Render(m_Direct3D->GetDeviceContext());
 	worldMatrix = XMMatrixIdentity();
 	viewMatrix = XMMatrixIdentity();
@@ -597,7 +619,7 @@ bool ApplicationClass::Render(float rotation)
 	m_Direct3D->SetZBufferOnOff(false);
 	m_Direct3D->EnableAlphaBlending();
 
-	result = m_BitmapShader->Render(m_BitmapShaderInput, m_TextTest2->GetIndexCount());
+	result = m_TextShader->Render(m_BitmapShaderInput, m_TextTest2->GetIndexCount(), m_TextTest2->GetInstanceNum());
 	if (!result)
 	{
 		return false;
